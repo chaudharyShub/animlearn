@@ -1,0 +1,285 @@
+{
+  "id": "13PrwJjtj4AR",
+  "prompt": "How does Docker work?",
+  "createdAt": "2026-10-29T13:17:31.255Z",
+  "updatedAt": "2026-10-29T16:20:06.942Z",
+  "status": "partial",
+  "steps": [
+    {
+      "status": "ready",
+      "code": "// Layout: two computer containers side by side with a 240px gap for the \"copy app\" arrow.\n// Laptop x 40..360, Server x 600..920, both y 70..400.\n// Inside each: App box (w160,h64) at y 156, dependency blocks (w160,h56) at y 236 and y 316, centered at cx 200 / 760.\n// \"error\" label above the server App (y 120). One note centered below (y 424).\nconst tl = h.timeline();\n\n// Laptop\nconst laptop = h.container({ x: 40, y: 70, w: 320, h: 330, label: 'Laptop', role: 'neutral' });\nconst lapApp = h.box({ x: 120, y: 156, w: 160, h: 64, label: 'App', role: 'active' });\nconst lapPy = h.box({ x: 120, y: 236, w: 160, h: 56, label: 'Python 3.12', role: 'new', size: 'body' });\nconst lapSsl = h.box({ x: 120, y: 316, w: 160, h: 56, label: 'libssl 3', role: 'new', size: 'body' });\n\n// Server\nconst server = h.container({ x: 600, y: 70, w: 320, h: 330, label: 'Server', role: 'neutral' });\nconst srvApp = h.box({ x: 680, y: 156, w: 160, h: 64, label: 'App', role: 'active' });\nconst srvPy = h.box({ x: 680, y: 236, w: 160, h: 56, label: 'Python 3.8', role: 'old', size: 'body' });\nconst srvSsl = h.box({ x: 680, y: 316, w: 160, h: 56, label: 'no libssl 3', role: 'muted', size: 'body', dashed: true });\n\nconst errText = h.text({ x: 760, y: 120, text: 'error', size: 'body', anchor: 'middle', role: 'danger' });\n\nconst copy = h.arrow(lapApp, srvApp, { label: 'copy app', role: 'accent' });\n\nconst n = h.note({ x: 300, y: 424, w: 360, text: 'Same app, but the server has different dependencies.', role: 'accent' });\n\n// Initially hidden things\ngsap.set([srvApp, errText, n], { opacity: 0 });\n\n// 1) Set the scene\nh.reveal(tl, [laptop, lapApp, lapPy, lapSsl], 0, { from: 'up', stagger: 0.1 });\nh.reveal(tl, [server, srvPy, srvSsl], 0.4, { from: 'up', stagger: 0.1 });\n\n// 2) Copy the app over\nh.pulse(tl, lapApp, '>0.4');\nh.draw(tl, copy, '>0.2');\nh.flow(tl, lapApp, srvApp, '>', { label: 'App', along: copy, role: 'accent' });\nh.reveal(tl, srvApp, '>-0.3', { from: 'scale' });\n\n// 3) The server's dependencies differ\nh.wait(tl, 0.4);\nh.pulse(tl, [srvPy, srvSsl], '>', { times: 1 });\nh.recolor(tl, srvSsl, 'danger', '>0.2');\n\n// 4) The one change: the copied app fails\nh.recolor(tl, srvApp, 'danger', '>0.4');\nh.reveal(tl, errText, '<0.2', { from: 'down' });\nh.pulse(tl, srvApp, '>0.1');\n\nh.reveal(tl, n, '>0.5', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:18:58.567Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: one centered column at cx 480. The 'Image' container spans x 380..580, y 60..410.\n// Inside it, App (w160,h64) sits at y 110, followed by Python 3.12 / libssl 3 / config (w160,h56) at y 190, 262 and 334.\n// The blocks start scattered left and right (±260px), slide into the column, then the Image outline closes around them.\n// Note centered below at y 434.\nconst tl = h.timeline();\n\nconst image = h.container({ x: 380, y: 60, w: 200, h: 350, label: 'Image', role: 'new' });\nconst app = h.box({ x: 400, y: 110, w: 160, h: 64, label: 'App', role: 'active' });\nconst py = h.box({ x: 400, y: 190, w: 160, h: 56, label: 'Python 3.12', role: 'new', size: 'body' });\nconst ssl = h.box({ x: 400, y: 262, w: 160, h: 56, label: 'libssl 3', role: 'new', size: 'body' });\nconst cfg = h.box({ x: 400, y: 334, w: 160, h: 56, label: 'config', role: 'new', size: 'body' });\n\nconst n = h.note({ x: 340, y: 434, w: 280, text: 'no kernel inside', role: 'accent' });\n\n// Initial state: blocks scattered, outline and note hidden\ngsap.set(image, { opacity: 0 });\ngsap.set(n, { opacity: 0 });\ngsap.set(app, { x: -260, opacity: 0 });\ngsap.set(py, { x: 260, opacity: 0 });\ngsap.set(ssl, { x: -260, opacity: 0 });\ngsap.set(cfg, { x: 260, opacity: 0 });\n\n// 1) Set the scene: the app and its loose dependencies\ntl.to([app, py, ssl, cfg], { opacity: 1, duration: 0.6, stagger: 0.12 }, 0);\nh.pulse(tl, app, '>0.3');\n\n// 2) The one change: everything slides together...\ntl.to([app, py, ssl, cfg], { x: 0, duration: 1.2, ease: 'power2.inOut', stagger: 0.08 }, '>0.4');\n\n// ...and the Image outline closes around it\nh.reveal(tl, image, '>0.3', { from: 'scale', duration: 0.8 });\nh.pulse(tl, image, '>0.2', { times: 1, scale: 1.03 });\n\n// 3) What's not inside\nh.reveal(tl, n, '>0.5', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:19:31.321Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: two columns joined by a labelled arrow.\n// Left: Dockerfile code panel x 40..420, y 150 (4 lines, w 380).\n// Right: empty dashed \"Image\" placeholder x 640..880, y 150..270, where the image will appear.\n// Gap 420..640 (220px) holds the \"docker build\" arrow.\n// Under the placeholder: a column of four step labels at cx 760, y 294 / 322 / 350 / 378, each revealed in turn.\n// One note centered at the bottom (y 430).\nconst tl = h.timeline();\n\nconst file = h.code({\n  x: 40, y: 150, w: 380, title: 'Dockerfile',\n  lines: [\n    'FROM python:3.12',\n    'COPY requirements.txt .',\n    'RUN pip install -r requirements.txt',\n    'COPY . .'\n  ]\n});\n\nconst target = h.box({\n  x: 640, y: 150, w: 240, h: 120,\n  label: 'Image', sub: 'built here', role: 'muted', dashed: true\n});\n\nconst build = h.arrow(file, target, { label: 'docker build', role: 'accent' });\n\nconst stepTexts = [\n  'FROM: start from Python',\n  'COPY: add requirements',\n  'RUN: install libraries',\n  'COPY: add your code'\n].map((t, i) => h.text({\n  x: 760, y: 294 + i * 28, text: t, size: 'small', anchor: 'middle', role: 'active'\n}));\n\nconst n = h.note({\n  x: 280, y: 430, w: 400,\n  text: 'Each instruction is one step of building the image.', role: 'accent'\n});\n\ngsap.set([...stepTexts, n], { opacity: 0 });\n\n// 1) Set the scene\nh.reveal(tl, file, 0, { from: 'up' });\nh.reveal(tl, target, 0.4, { from: 'fade' });\n\n// 2) Start the build\nh.draw(tl, build, '>0.3');\n\n// 3) The one change: each line runs in turn\nfor (let i = 0; i < 4; i++) {\n  h.highlightLine(tl, file, i, i === 0 ? '>0.4' : '>');\n  h.reveal(tl, stepTexts[i], '<', { from: 'left' });\n  if (i > 0) h.dim(tl, stepTexts[i - 1], '<');\n  h.wait(tl, 0.7);\n}\n\nh.pulse(tl, target, '>');\nh.reveal(tl, n, '>0.4', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 2,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:19:48.623Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: two columns joined by a \"docker build\" arrow (180px gap).\n// Left: Dockerfile code panel x 40..420, y 120. \"app.py edited\" tag below it (y 296). One note below (y 380).\n// Right: \"Image\" container x 600..920, y 70..440. Layer blocks (w180, h56, gap 16) at x 624,\n// stacked bottom-up: base y 344, requirements y 272, packages y 200, code y 128.\n// \"cached\" tags sit to the right of the blocks at x 822.\nconst tl = h.timeline();\n\nconst df = h.code({ x: 40, y: 120, w: 380, title: 'Dockerfile', lines: [\n  'FROM python:3.12',\n  'COPY requirements.txt .',\n  'RUN pip install -r requirements.txt',\n  'COPY . .'\n] });\n\nconst image = h.container({ x: 600, y: 70, w: 320, h: 370, label: 'Image', role: 'neutral' });\n\nconst bx = 624, bw = 180, bh = 56;\nconst baseL = h.box({ x: bx, y: 344, w: bw, h: bh, label: 'python:3.12 base', sub: 'base layer', role: 'new', size: 'body' });\nconst reqL = h.box({ x: bx, y: 272, w: bw, h: bh, label: 'requirements.txt', sub: 'files layer', role: 'new', size: 'body' });\nconst pkgL = h.box({ x: bx, y: 200, w: bw, h: bh, label: 'installed packages', sub: 'packages layer', role: 'new', size: 'body' });\nconst codeL = h.box({ x: bx, y: 128, w: bw, h: bh, label: 'your code', sub: 'code layer', role: 'new', size: 'body' });\nconst layers = [baseL, reqL, pkgL, codeL];\n\nconst tagBase = h.text({ x: 822, y: 362, text: 'cached', size: 'small', muted: true, role: 'muted' });\nconst tagReq = h.text({ x: 822, y: 290, text: 'cached', size: 'small', muted: true, role: 'muted' });\nconst tagPkg = h.text({ x: 822, y: 218, text: 'cached', size: 'small', muted: true, role: 'muted' });\nconst tags = [tagBase, tagReq, tagPkg];\n\nconst build = h.arrow(df, image, { label: 'docker build', role: 'accent', fromSide: 'right', toSide: 'left' });\n\nconst edited = h.text({ x: 230, y: 296, text: 'app.py edited', size: 'body', anchor: 'middle', role: 'active' });\n\nconst n = h.note({ x: 40, y: 380, w: 380, text: 'Each layer is read-only: a saved set of file changes.', role: 'accent' });\n\ngsap.set([...layers, ...tags, edited, n], { opacity: 0 });\n\n// 1) Set the scene\nh.reveal(tl, [df, image], 0, { from: 'up', stagger: 0.2 });\nh.draw(tl, build, '>0.2');\n\n// 2) Build: one layer per instruction, bottom up\nfor (let i = 0; i < 4; i++) {\n  h.highlightLine(tl, df, i, '>0.3');\n  h.reveal(tl, layers[i], '<0.1', { from: 'up' });\n}\n\n// Layers are saved as read-only\nh.recolor(tl, layers, 'neutral', '>0.5');\nh.reveal(tl, n, '<', { from: 'up' });\n\n// 3) Code changes, rebuild\nh.wait(tl, 0.5);\nh.reveal(tl, edited, '>', { from: 'down' });\nh.pulse(tl, build, '>0.2');\nfor (let i = 0; i < 3; i++) {\n  h.highlightLine(tl, df, i, '>0.2', { role: 'active' });\n  h.reveal(tl, tags[i], '<0.1', { from: 'left', duration: 0.5 });\n}\n\n// Only the top layer is remade\nh.highlightLine(tl, df, 3, '>0.3');\nh.recolor(tl, codeL, 'old', '<0.1');\nh.recolor(tl, codeL, 'new', '>0.3');\nh.pulse(tl, codeL, '>0.1');\n\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:19:38.864Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: two columns joined by a wide 'docker run' arrow.\n// Left 'Image' container x 80..340, right 'Container' outline x 620..880, both y 60..450.\n// Layer blocks are w220 x h56, x +20 inside each column, at y 172, 240, 308, 376 (top to bottom).\n// The thin writable layer (h40) sits only in the Container, at y 108, which leaves a 24px gap above the stack.\n// Short 'read-only layers' labels sit under each column at y 466.\nconst tl = h.timeline();\n\nconst layerNames = ['your code', 'installed packages', 'requirements.txt', 'python:3.12 base'];\nconst ys = [172, 240, 308, 376];\n\n// Left: the image (already built in the previous step)\nconst image = h.container({ x: 80, y: 60, w: 260, h: 390, label: 'Image', role: 'neutral' });\nconst imgLayers = layerNames.map((name, i) =>\n  h.box({ x: 100, y: ys[i], w: 220, h: 56, label: name, role: 'neutral', size: 'body' }));\nconst roLeft = h.text({ x: 210, y: 466, text: 'read-only layers', size: 'small', anchor: 'middle', muted: true });\n\n// Right: the running container\nconst cont = h.container({ x: 620, y: 60, w: 260, h: 390, label: 'Container', role: 'active' });\nconst conLayers = layerNames.map((name, i) =>\n  h.box({ x: 640, y: ys[i], w: 220, h: 56, label: name, role: 'neutral', size: 'body' }));\nconst writable = h.box({ x: 640, y: 108, w: 220, h: 40, label: 'writable layer', role: 'new', size: 'body' });\nconst roRight = h.text({ x: 750, y: 466, text: 'read-only layers (unchanged)', size: 'small', anchor: 'middle', muted: true });\n\nconst run = h.arrow(image, cont, { label: 'docker run', role: 'accent' });\n\nconst fileDot = h.token({ x: 820, y: 84, label: 'new file', role: 'accent' });\n\n// Initial state: only the image is visible\ngsap.set([cont, ...conLayers, writable, roRight, fileDot], { opacity: 0 });\n\n// 1) Set the scene: the image from the previous step\nh.reveal(tl, [image, ...imgLayers], 0, { stagger: 0.08, duration: 0.6 });\nh.reveal(tl, roLeft, '>0.1', { duration: 0.5 });\n\n// 2) docker run makes a copy of the stack inside a Container\nh.draw(tl, run, '>0.4', { duration: 1 });\nh.reveal(tl, cont, '>0.1', { from: 'scale', duration: 0.7 });\nh.reveal(tl, [...conLayers].reverse(), '>-0.1', { from: 'left', stagger: 0.12, duration: 0.6 });\n\n// 3) The one change: a thin writable layer is added on top\nh.reveal(tl, writable, '>0.5', { from: 'down', duration: 0.8 });\nconst ring = h.highlight(tl, writable, '>0.2', { role: 'new', pad: 6 });\n\n// 4) A new file goes into the writable layer only\nh.reveal(tl, fileDot, '>0.4', { from: 'scale', duration: 0.5 });\nh.moveBy(tl, fileDot, { dx: 0, dy: 44 }, '>0.2');\nh.hide(tl, fileDot, '>0');\nh.pulse(tl, writable, '<0.1', { times: 1, scale: 1.05 });\nh.hide(tl, ring, '>0.2');\n\n// The layers below stay unchanged\nh.reveal(tl, roRight, '>0.3', { duration: 0.6 });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:20:09.653Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: three Container outlines in a top row (w240, h140, y 70..210) at x 40, 360, 680 (gap 80).\n// Each holds one thin \"writable layer\" block (w200, h48), role new.\n// Image container centred at the bottom: x 360..600, y 290..490, three read-only layers (w200, h40, gap 12).\n// \"shared layers\" label sits to the right of the image (x 624). Dashed muted lines join each container to the image.\nconst tl = h.timeline();\n\n// --- Image (shared, read-only) ---\nconst image = h.container({ x: 360, y: 290, w: 240, h: 200, label: 'Image', role: 'neutral' });\nconst lx = 380, lw = 200, lh = 40;\nconst codeL = h.box({ x: lx, y: 334, w: lw, h: lh, label: 'your code', role: 'neutral', size: 'body' });\nconst pkgL = h.box({ x: lx, y: 386, w: lw, h: lh, label: 'packages', role: 'neutral', size: 'body' });\nconst baseL = h.box({ x: lx, y: 438, w: lw, h: lh, label: 'python base', role: 'neutral', size: 'body' });\nconst layers = [codeL, pkgL, baseL];\nconst shared = h.text({ x: 624, y: 392, text: 'shared layers', size: 'body', role: 'accent' });\nconst ro = h.text({ x: 624, y: 418, text: 'read-only', size: 'small', muted: true, role: 'muted' });\n\n// --- Containers ---\nconst names = ['Container A', 'Container B', 'Container C'];\nconst xs = [40, 360, 680];\nconst conts = [], wls = [], links = [];\nfor (let i = 0; i < 3; i++) {\n  const c = h.container({ x: xs[i], y: 70, w: 240, h: 140, label: names[i], role: 'neutral' });\n  const wy = c.inner.y + Math.max(4, (c.inner.h - 48) / 2);\n  const wl = h.box({ x: xs[i] + 20, y: wy, w: 200, h: 48, label: 'writable layer', role: 'new', size: 'body' });\n  conts.push(c);\n  wls.push(wl);\n}\nfor (let i = 0; i < 3; i++) {\n  links.push(h.line(conts[i], image, { dashed: true, role: 'muted', fromSide: 'bottom', toSide: 'top' }));\n}\n\ngsap.set([image, ...layers, shared, ro, ...conts, ...wls], { opacity: 0 });\n\n// 1) Set the scene: the image from before\nh.reveal(tl, [image, ...layers], 0, { from: 'up', stagger: 0.1 });\n\n// 2) Start three containers from it\nh.reveal(tl, conts, '>0.3', { from: 'down', stagger: 0.25 });\nh.reveal(tl, wls, '>0.1', { from: 'scale', stagger: 0.25 });\nfor (let i = 0; i < 3; i++) {\n  h.draw(tl, links[i], i === 0 ? '>0.3' : '<0.2', { duration: 0.6 });\n}\n\n// They all share the same read-only layers\nh.reveal(tl, [shared, ro], '>0.2', { from: 'left' });\nh.pulse(tl, layers, '<', { times: 1 });\nh.pulse(tl, wls, '>0.3', { times: 1 });\n\n// 3) Delete Container C: its writable layer goes with it\nh.wait(tl, 0.6);\nh.recolor(tl, [conts[2], wls[2]], 'danger', '>');\nh.recolor(tl, links[2], 'danger', '<');\nh.hide(tl, [conts[2], wls[2], links[2]], '>0.5');\n\n// The image stays untouched\nh.pulse(tl, image, '>0.3');\n\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:20:05.895Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: split canvas. Left half x 40..460 \"Virtual Machines\", right half x 500..920 \"Containers\".\n// Titles at y 48. Each side has a 'Host' container y 90..470.\n// Left: Hypervisor bar x 64..436, y 400 (h48). Two VM boxes (w172, h246) at x 64 and 264, y 130,\n//   each holding App (y166), Libraries (y230), Guest Kernel (y294), blocks w148, h48.\n// Right: Linux Kernel bar x 524..896, y 400 (h48). Three containers (w108, h166) at x 524/656/788, y 210,\n//   labelled 'A', 'B', 'C' (as in step 6), each holding App (y242) and Libraries (y304), blocks w92, h48.\n// Note at top of right host (y 124).\nconst tl = h.timeline();\n\n// Titles\nconst tVM = h.text({ x: 250, y: 48, text: 'Virtual Machines', size: 'heading', anchor: 'middle' });\nconst tCT = h.text({ x: 710, y: 48, text: 'Containers', size: 'heading', anchor: 'middle' });\n\n// ---- Left: virtual machines ----\nconst hostL = h.container({ x: 40, y: 90, w: 420, h: 380, label: 'Host', role: 'neutral' });\nconst hyper = h.box({ x: 64, y: 400, w: 372, h: 48, label: 'Hypervisor', role: 'muted', size: 'body' });\n\nconst vmXs = [64, 264];\nconst vms = [], vmParts = [], guestKernels = [];\nvmXs.forEach((vx, i) => {\n  const vm = h.container({ x: vx, y: 130, w: 172, h: 246, label: i === 0 ? 'VM 1' : 'VM 2', role: 'neutral' });\n  const app = h.box({ x: vx + 12, y: 166, w: 148, h: 48, label: 'App', role: 'neutral', size: 'body' });\n  const lib = h.box({ x: vx + 12, y: 230, w: 148, h: 48, label: 'Libraries', role: 'neutral', size: 'body' });\n  const gk = h.box({ x: vx + 12, y: 294, w: 148, h: 48, label: 'Guest Kernel', role: 'neutral', size: 'body' });\n  vms.push(vm);\n  vmParts.push(app, lib, gk);\n  guestKernels.push(gk);\n});\n\n// ---- Right: containers ----\nconst hostR = h.container({ x: 500, y: 90, w: 420, h: 380, label: 'Host', role: 'neutral' });\nconst kernel = h.box({ x: 524, y: 400, w: 372, h: 48, label: 'Linux Kernel', role: 'muted', size: 'body' });\n\nconst cXs = [524, 656, 788];\nconst names = ['A', 'B', 'C'];\nconst conts = [], contParts = [];\ncXs.forEach((cx, i) => {\n  const c = h.container({ x: cx, y: 210, w: 108, h: 166, label: names[i], role: 'neutral' });\n  const app = h.box({ x: cx + 8, y: 242, w: 92, h: 48, label: 'App', role: 'neutral', size: 'small' });\n  const lib = h.box({ x: cx + 8, y: 304, w: 92, h: 48, label: 'Libraries', role: 'neutral', size: 'small' });\n  conts.push(c);\n  contParts.push(app, lib);\n});\n\nconst n = h.note({ x: 524, y: 124, w: 372, text: 'One kernel, shared by every container.', role: 'active' });\n\ngsap.set([n], { opacity: 0 });\n\n// 1) Set the scene: left side, then right side\nh.reveal(tl, [tVM, hostL, hyper], 0, { from: 'up', stagger: 0.1 });\nh.reveal(tl, [...vms, ...vmParts], '<0.2', { from: 'up', stagger: 0.04 });\nh.reveal(tl, [tCT, hostR, kernel], '<0.3', { from: 'up', stagger: 0.1 });\nh.reveal(tl, [...conts, ...contParts], '<0.2', { from: 'up', stagger: 0.04 });\n\n// 2) Each VM carries its own kernel\nh.recolor(tl, guestKernels, 'old', '>0.5');\nh.pulse(tl, guestKernels, '>0.1', { times: 1 });\n\n// 3) The one change: a single shared kernel under all containers\nh.recolor(tl, kernel, 'active', '>0.6');\nconst ring = h.highlight(tl, kernel, '<', { role: 'active', pad: 8 });\nh.pulse(tl, conts, '>0.3', { times: 1, scale: 1.04 });\nh.reveal(tl, n, '>0.3', { from: 'up' });\n\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 2,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:20:43.674Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: 'Host Computer' container fills canvas (x 40..920, y 60..500).\n// 'Linux Kernel' bar along its bottom: x 64..896, y 432..480 (muted).\n// Two containers on the kernel: A x 72..412, B x 548..888, y 116..408 (gap 136 for the wall).\n// Inside each: 2x2 panels (w134, h52) at columns +24 / +182, rows y 164 and 240,\n// then a PID row (h40) at y 316. Dashed namespace wall at x 480, label 'Namespaces' above it (y 96).\nconst tl = h.timeline();\n\nconst host = h.container({ x: 40, y: 60, w: 880, h: 440, label: 'Host Computer', role: 'neutral' });\nconst kernel = h.box({ x: 64, y: 432, w: 832, h: 48, label: 'Linux Kernel', role: 'muted', size: 'body' });\n\nconst names = ['Container A', 'Container B'];\nconst xs = [72, 548];\nconst hostnames = ['web-a', 'web-b'];\nconst conts = [], panels = [], procs = [], pids = [];\nfor (let i = 0; i < 2; i++) {\n  const x0 = xs[i];\n  const c = h.container({ x: x0, y: 116, w: 340, h: 292, label: names[i], role: 'neutral' });\n  const c1 = x0 + 24, c2 = x0 + 182;\n  const files = h.box({ x: c1, y: 164, w: 134, h: 52, label: 'files', sub: '/app', role: 'neutral', size: 'body' });\n  const net = h.box({ x: c2, y: 164, w: 134, h: 52, label: 'network', sub: 'eth0', role: 'neutral', size: 'body' });\n  const proc = h.box({ x: c1, y: 240, w: 134, h: 52, label: 'processes', role: 'neutral', size: 'body' });\n  const hn = h.box({ x: c2, y: 240, w: 134, h: 52, label: 'hostname', sub: hostnames[i], role: 'neutral', size: 'body' });\n  const p1 = h.box({ x: c1, y: 316, w: 134, h: 40, label: 'PID 1', role: 'neutral', size: 'small', shape: 'pill' });\n  const p2 = h.box({ x: c2, y: 316, w: 134, h: 40, label: 'PID 2', role: 'neutral', size: 'small', shape: 'pill' });\n  conts.push(c);\n  panels.push([files, net, proc, hn]);\n  procs.push(proc);\n  pids.push([p1, p2]);\n}\n\nconst wall = h.line({ x: 480, y: 140 }, { x: 480, y: 404 }, { dashed: true, role: 'muted', width: 4 });\nconst nsLabel = h.text({ x: 480, y: 96, text: 'Namespaces', size: 'label', anchor: 'middle', role: 'active' });\nconst look = h.token({ x: 440, y: 190, label: 'look', role: 'accent', r: 14 });\n\nconst allPanels = [...panels[0], ...panels[1]];\nconst allPids = [...pids[0], ...pids[1]];\ngsap.set([host, kernel, ...conts, ...allPanels, ...allPids, wall, nsLabel, look], { opacity: 0 });\n\n// 1) Set the scene: host, kernel, two containers (from previous step)\nh.reveal(tl, [host, kernel], 0, { from: 'up', stagger: 0.1, duration: 0.6 });\nh.reveal(tl, conts, '>0.1', { from: 'down', stagger: 0.2, duration: 0.6 });\nh.reveal(tl, allPanels, '>0.2', { from: 'scale', stagger: 0.05, duration: 0.5 });\nh.reveal(tl, allPids, '>0.1', { from: 'fade', stagger: 0.05, duration: 0.5 });\n\n// 2) Container A tries to look sideways at B\nh.reveal(tl, look, '>0.5', { from: 'scale', duration: 0.5 });\nh.moveBy(tl, look, { dx: 14, dy: 0 }, '>0.1');\n\n// 3) The namespace wall appears and blocks the view\nh.draw(tl, wall, '>0.1', { duration: 0.8 });\nh.recolor(tl, wall, 'active', '>0.1');\nh.reveal(tl, nsLabel, '<', { from: 'down', duration: 0.6 });\nh.recolor(tl, look, 'danger', '<');\nh.hide(tl, look, '>0.3');\n\n// 4) Each container sees only its own world\nh.recolor(tl, panels[0], 'active', '>0.4');\nh.recolor(tl, panels[1], 'active', '<');\nh.pulse(tl, allPanels, '>0.1', { times: 1 });\n\n// Own process list, numbered from PID 1 in each container\nh.wait(tl, 0.4);\nh.recolor(tl, allPids, 'new', '>');\nconst ring = h.highlight(tl, pids[0][0], '>0.2', { role: 'new', pad: 6 });\nh.pulse(tl, [pids[0][0], pids[1][0]], '>0.2', { times: 1 });\n\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:20:45.531Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: Host Computer container fills canvas (x40..920, y56..496).\n// Kernel row at bottom (y420, h56): 'Linux Kernel' bar x64..600 (muted), 'cgroups' box x624..896.\n// Container A x64..264, Container B x480..680, both y110..382, each with App + two lib blocks.\n// Gauges as thick vertical bars beside each container: A at x304 (CPU) / x376 (Memory),\n// B at x720 (CPU) / x792 (Memory). Bars run y360 (empty) up to y160 (limit line).\n// Limit labels above at y136, gauge names below at y368.\nconst tl = h.timeline();\n\nconst host = h.container({ x: 40, y: 56, w: 880, h: 440, label: 'Host Computer', role: 'neutral' });\nconst kernel = h.box({ x: 64, y: 420, w: 536, h: 56, label: 'Linux Kernel', role: 'muted' });\nconst cg = h.box({ x: 624, y: 420, w: 272, h: 56, label: 'cgroups', sub: 'resource limits', role: 'neutral' });\n\nconst names = ['Container A', 'Container B'];\nconst cxs = [64, 480];\nconst conts = [], insides = [];\nfor (let i = 0; i < 2; i++) {\n  const c = h.container({ x: cxs[i], y: 110, w: 200, h: 272, label: names[i], role: 'neutral' });\n  const iy = c.inner.y + 8;\n  const app = h.box({ x: cxs[i] + 20, y: iy, w: 160, h: 56, label: 'App', role: 'neutral' });\n  const l1 = h.box({ x: cxs[i] + 20, y: iy + 80, w: 160, h: 40, label: 'libs', role: 'neutral', size: 'body' });\n  const l2 = h.box({ x: cxs[i] + 20, y: iy + 132, w: 160, h: 40, label: 'runtime', role: 'neutral', size: 'body' });\n  conts.push(c);\n  insides.push(app, l1, l2);\n}\n\n// Gauges\nconst gx = [[304, 376], [720, 792]];\nconst bottom = 360, limitY = 160;\nconst tracks = [], gLabels = [], limits = [], limitTexts = [];\nfor (let i = 0; i < 2; i++) {\n  for (let j = 0; j < 2; j++) {\n    const x = gx[i][j];\n    tracks.push(h.line({ x, y: bottom }, { x, y: limitY - 6 }, { role: 'muted', width: 28, gap: 0 }));\n    gLabels.push(h.text({ x, y: 368, text: j === 0 ? 'CPU' : 'Memory', size: 'small', anchor: 'middle' }));\n    limits.push(h.line({ x: x - 22, y: limitY }, { x: x + 22, y: limitY }, { role: 'neutral', width: 3, gap: 0 }));\n    limitTexts.push(h.text({ x, y: 134, text: j === 0 ? 'limit' : 'max 512 MB', size: 'small', anchor: 'middle', muted: j === 0 }));\n  }\n}\n\n// Fill levels: A CPU, A Mem (rises to limit), B CPU, B Mem\nconst aCpu = h.line({ x: 304, y: bottom }, { x: 304, y: 270 }, { role: 'accent', width: 28, gap: 0 });\nconst aMem = h.line({ x: 376, y: bottom }, { x: 376, y: limitY }, { role: 'active', width: 28, gap: 0 });\nconst bCpu = h.line({ x: 720, y: bottom }, { x: 720, y: 290 }, { role: 'accent', width: 28, gap: 0 });\nconst bMem = h.line({ x: 792, y: bottom }, { x: 792, y: 280 }, { role: 'accent', width: 28, gap: 0 });\n\n// cgroups enforces limits\nconst linkA = h.line({ x: 660, y: 414 }, { x: 390, y: 392 }, { role: 'muted', dashed: true, gap: 0 });\nconst linkB = h.line({ x: 792, y: 414 }, { x: 792, y: 392 }, { role: 'muted', dashed: true, gap: 0 });\n\ngsap.set([host, kernel, cg, ...conts, ...insides, ...tracks, ...gLabels, ...limits, ...limitTexts], { opacity: 0 });\n\n// 1) Scene from before\nh.reveal(tl, [host, kernel], 0, { from: 'fade', stagger: 0.1 });\nh.reveal(tl, conts, '>0.1', { from: 'down', stagger: 0.15 });\nh.reveal(tl, insides, '<0.2', { from: 'fade', stagger: 0.04 });\n\n// 2) cgroups and gauges appear\nh.reveal(tl, cg, '>0.3', { from: 'up' });\nh.recolor(tl, cg, 'active', '<');\nh.reveal(tl, [...tracks, ...gLabels], '>0.1', { stagger: 0.05 });\nh.reveal(tl, [...limits, ...limitTexts], '>0.1', { stagger: 0.05 });\nh.draw(tl, linkA, '>0.1', { duration: 0.6 });\nh.draw(tl, linkB, '<', { duration: 0.6 });\n\n// Normal usage\nh.draw(tl, aCpu, '>0.3', { duration: 0.8 });\nh.draw(tl, bCpu, '<', { duration: 0.8 });\nh.draw(tl, bMem, '<', { duration: 0.8 });\n\n// 3) The one change: Container A's memory climbs to the limit\nh.highlight(tl, conts[0], '>0.4', { role: 'active', pad: 6 });\nh.draw(tl, aMem, '<', { duration: 2.6 });\n\n// Stopped at the limit\nh.recolor(tl, [limits[1], limitTexts[1]], 'danger', '>');\nh.recolor(tl, aMem, 'danger', '<');\nh.pulse(tl, [limits[1], limitTexts[1]], '>0.1', { times: 2 });\nh.pulse(tl, cg, '<', { times: 1 });\n\n// B stays steady\nh.pulse(tl, [bCpu, bMem], '>0.4', { times: 1, scale: 1.03 });\n\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:21:13.689Z"
+    },
+    {
+      "status": "error",
+      "error": "browser.newPage: Target crashed ",
+      "attempts": 0
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: outer 'Windows or macOS' container fills canvas (x 40..920, y 60..500).\n// Left column (x 64..264): 'Docker client' code panel at y 148, note below at y 340.\n// Right: 'Lightweight Linux VM' container x 336..896, y 100..480 (new colour).\n//   Docker daemon box x 360..560, y 148..204.\n//   Two containers y 232..384: A x 360..592, B x 640..872 (gap 48); App + libs inside each.\n//   'Linux Kernel' bar x 360..872, y 408..456 (muted), under the containers.\nconst tl = h.timeline();\n\nconst os = h.container({ x: 40, y: 60, w: 880, h: 440, label: 'Windows or macOS', role: 'neutral' });\nconst vm = h.container({ x: 336, y: 100, w: 560, h: 380, label: 'Lightweight Linux VM', role: 'new' });\n\nconst client = h.code({ x: 64, y: 148, w: 200, title: 'Docker client', lines: ['$ docker run nginx'] });\nconst daemon = h.box({ x: 360, y: 148, w: 200, h: 56, label: 'Docker daemon', role: 'neutral', size: 'body' });\n\nconst kernel = h.box({ x: 360, y: 408, w: 512, h: 48, label: 'Linux Kernel', role: 'muted', size: 'body' });\n\nconst xs = [360, 640];\nconst names = ['Container 1', 'Container 2'];\nconst conts = [], insides = [];\nfor (let i = 0; i < 2; i++) {\n  const x0 = xs[i];\n  const c = h.container({ x: x0, y: 232, w: 232, h: 152, label: names[i], role: 'neutral' });\n  const app = h.box({ x: x0 + 24, y: 274, w: 184, h: 40, label: 'App', role: 'neutral', size: 'body' });\n  const libs = h.box({ x: x0 + 24, y: 326, w: 184, h: 36, label: 'libraries', role: 'neutral', size: 'small', shape: 'pill' });\n  conts.push(c);\n  insides.push(app, libs);\n}\n\nconst cmd = h.arrow(client, daemon, { role: 'accent', fromSide: 'right', toSide: 'left' });\nconst note = h.note({ x: 64, y: 340, w: 240, text: 'No Linux kernel on the host, so Docker Desktop brings one.', role: 'accent' });\n\ngsap.set([vm, client, daemon, kernel, ...conts, ...insides, note], { opacity: 0 });\n\n// 1) Set the scene: the non-Linux computer, the client, the familiar daemon, containers and kernel\nh.reveal(tl, os, 0, { from: 'up', duration: 0.6 });\nh.reveal(tl, client, '>0.1', { from: 'left', duration: 0.6 });\nh.reveal(tl, [daemon, kernel], '<', { from: 'fade', stagger: 0.1, duration: 0.6 });\nh.reveal(tl, conts, '>0.1', { from: 'down', stagger: 0.15, duration: 0.6 });\nh.reveal(tl, insides, '>0.1', { from: 'scale', stagger: 0.05, duration: 0.5 });\n\n// 2) The one change: a hidden Linux VM appears around them\nh.wait(tl, 0.4);\nh.reveal(tl, vm, '>', { from: 'scale', duration: 1 });\nconst ring = h.highlight(tl, vm, '>0.1', { role: 'new', pad: 6 });\nh.pulse(tl, kernel, '>0.2', { times: 1 });\nh.hide(tl, ring, '>0.3');\n\n// 3) Commands from the client cross into the VM's daemon\nh.highlightLine(tl, client, 0, '>0.3');\nh.draw(tl, cmd, '>0.2', { duration: 0.6 });\nh.flow(tl, client, daemon, '>', { label: 'run', along: cmd, role: 'accent', duration: 1.2 });\nh.recolor(tl, daemon, 'active', '>-0.2');\nh.pulse(tl, conts, '>0.2', { times: 1 });\n\nh.reveal(tl, note, '>0.4', { from: 'up', duration: 0.6 });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:21:18.857Z"
+    }
+  ],
+  "plan": {
+    "title": "How Docker Works",
+    "summary": "You will understand how Docker packages an app with everything it needs into an image, and runs that image as an isolated container that shares the computer's operating system kernel.",
+    "prerequisites": [
+      {
+        "term": "Operating system kernel",
+        "explanation": "The core part of an operating system (like Linux) that controls the hardware: memory, CPU, files and network. Every program asks the kernel when it needs these things."
+      },
+      {
+        "term": "Process",
+        "explanation": "A program that is currently running. One computer can run many processes at the same time, and the kernel keeps track of all of them."
+      },
+      {
+        "term": "Dependencies",
+        "explanation": "The extra pieces an app needs to run, such as libraries (reusable code), a language runtime like Python, and configuration files."
+      },
+      {
+        "term": "Virtual machine (VM)",
+        "explanation": "Software that imitates a whole computer, including its own full operating system and kernel, running on top of a real computer."
+      }
+    ],
+    "analogy": {
+      "text": "Think of a shipping container. Goods are packed once into a standard box, and any ship, train or truck can carry it without caring what is inside. Docker packs an app and its dependencies into a standard 'box' that any machine with Docker can run. The analogy breaks down in one way: Docker containers are not sealed and independent like steel boxes. They all share the host computer's kernel, so the isolation is weaker than it sounds."
+    },
+    "visualGuide": "A large 'Host Computer' rectangle often fills the lower part of the canvas, with a 'Linux Kernel' bar along its bottom in muted colour. Containers appear as rounded boxes sitting on top of the kernel bar, each holding an 'App' box and a small stack of library blocks. Images are drawn as vertical stacks of flat layer blocks on the left, and the Registry is a cloud-like box at the top right. Active shows what is happening now, new marks things being created (built layers, new containers, writable layers), accent marks data or commands moving along arrows, danger marks conflicts or limits being hit, and muted is background context.",
+    "steps": [
+      {
+        "title": "The 'works on my machine' problem",
+        "caption": "An app runs fine on a developer's laptop but fails on a server. Usually the server has different versions of dependencies, such as an older Python or a missing library.",
+        "visual": {
+          "description": "Two computer boxes side by side: 'Laptop' on the left and 'Server' on the right. Each contains an 'App' box resting on a stack of dependency blocks. Laptop's stack reads 'Python 3.12' and 'libssl 3'. An arrow labelled 'copy app' moves the App box from Laptop to Server. Server's stack reads 'Python 3.8' with no 'libssl 3'. The App on the server turns danger colour with a small 'error' label.",
+          "keyElements": [
+            "Laptop",
+            "Server",
+            "App",
+            "Python 3.12",
+            "Python 3.8",
+            "error"
+          ],
+          "whatChanges": "The copied app turns red because the server's dependencies differ."
+        }
+      },
+      {
+        "title": "Package app with dependencies",
+        "caption": "Docker's idea: ship the app together with everything it needs, not just the app. This package is called an image. It holds the files, libraries and settings, but no kernel.",
+        "visual": {
+          "description": "In the center, the App box and its dependency blocks ('Python 3.12', 'libssl 3', 'config') slide together and a rounded outline closes around them, labelled 'Image'. A small note under the outline says 'no kernel inside'. The outline appears in the new colour.",
+          "keyElements": [
+            "App",
+            "Python 3.12",
+            "libssl 3",
+            "config",
+            "Image",
+            "no kernel inside"
+          ],
+          "whatChanges": "The app and its dependencies get wrapped together into one Image."
+        }
+      },
+      {
+        "title": "Dockerfile: the recipe",
+        "caption": "An image is built from a Dockerfile, a text file of instructions. Each instruction, like 'start from Python' or 'copy my code', describes one step of building the image.",
+        "visual": {
+          "description": "On the left, a code panel titled 'Dockerfile' shows four lines: 'FROM python:3.12', 'COPY requirements.txt .', 'RUN pip install -r requirements.txt', 'COPY . .'. An arrow labelled 'docker build' points right to an empty area where the Image will appear. Each line highlights in turn in the active colour.",
+          "keyElements": [
+            "Dockerfile",
+            "FROM",
+            "COPY",
+            "RUN",
+            "docker build"
+          ],
+          "whatChanges": "Each Dockerfile line highlights one after another as the build runs."
+        }
+      },
+      {
+        "title": "Images are stacked layers",
+        "caption": "Steps that add or change files each create a read-only layer, a saved set of file changes. Stacked together, the layers form the image's full file system. Unchanged layers are cached and reused, so rebuilds are fast.",
+        "visual": {
+          "description": "The Dockerfile panel stays on the left. On the right, a vertical stack builds from the bottom up, one block per line: 'python:3.12 base', 'requirements.txt', 'installed packages', 'your code'. Each block appears in the new colour as its line is highlighted. Then the code changes and the build runs again: the bottom three blocks get a 'cached' tag in muted colour, and only the top 'your code' block is rebuilt in the new colour.",
+          "keyElements": [
+            "Image",
+            "base layer",
+            "packages layer",
+            "code layer",
+            "read-only",
+            "cached"
+          ],
+          "whatChanges": "Layers stack up one per step, and on a rebuild only the changed top layer is remade."
+        }
+      },
+      {
+        "title": "Running an image: a container",
+        "caption": "A container is a running instance of an image. Docker adds a thin writable layer on top of the read-only image layers. Any files the app creates or changes go into that top layer only.",
+        "visual": {
+          "description": "The layer stack from the previous step sits on the left. An arrow labelled 'docker run' points right to a copy of the same stack inside a rounded 'Container' outline. A new thin block in the new colour appears on top, labelled 'writable layer'. A small accent dot labelled 'new file' drops into the writable layer, while the layers below stay unchanged.",
+          "keyElements": [
+            "Image",
+            "docker run",
+            "Container",
+            "writable layer",
+            "read-only layers"
+          ],
+          "whatChanges": "A writable layer is added on top of the image to make a running container."
+        }
+      },
+      {
+        "title": "Many containers, one image",
+        "caption": "You can start several containers from the same image. They share its read-only layers, and each gets its own writable layer. Deleting a container deletes its writable layer.",
+        "visual": {
+          "description": "One image layer stack sits in the center bottom. Three Container outlines above it, labelled 'Container A', 'B' and 'C', each have their own thin writable layer, with dashed lines down to the shared image stack. Then Container C turns danger colour and fades away, taking its writable layer with it, while the image stays.",
+          "keyElements": [
+            "Image",
+            "Container A",
+            "Container B",
+            "Container C",
+            "writable layer",
+            "shared layers"
+          ],
+          "whatChanges": "Three containers share one image, then one is removed along with its writable layer."
+        }
+      },
+      {
+        "title": "Containers share the kernel",
+        "caption": "A container is not a virtual machine. It is a normal process on the host, using the host's own Linux kernel. That is why containers start in about a second and use little memory.",
+        "visual": {
+          "description": "Split canvas. Left side titled 'Virtual Machines': a Host box with a 'Hypervisor' bar, and two VM boxes each containing 'App', 'Libraries' and their own 'Guest Kernel' block. Right side titled 'Containers': a Host box with one 'Linux Kernel' bar at the bottom and three small Container boxes containing 'App' and 'Libraries', all resting directly on the kernel bar. The single shared kernel bar on the right highlights in the active colour.",
+          "keyElements": [
+            "Virtual Machines",
+            "Guest Kernel",
+            "Containers",
+            "Linux Kernel",
+            "Host"
+          ],
+          "whatChanges": "The single shared kernel under all containers highlights, in contrast to each VM's own kernel."
+        }
+      },
+      {
+        "title": "Namespaces give each container its own view",
+        "caption": "Linux namespaces are a kernel feature that limits what a process can see. Each container gets its own file system, process list, network and hostname, so it seems to be alone on the machine.",
+        "visual": {
+          "description": "The Host box with the Linux Kernel bar at the bottom. Two Container boxes sit on it. Inside each container appear small labelled panels: 'files', 'processes', 'network', 'hostname'. An eye icon in Container A looks sideways at Container B, and a dashed wall between them turns active colour, blocking the view. Container A's process list shows only its own processes, numbered from 'PID 1'.",
+          "keyElements": [
+            "Namespaces",
+            "files",
+            "processes",
+            "network",
+            "PID 1",
+            "Container A",
+            "Container B"
+          ],
+          "whatChanges": "A wall appears between containers, so each sees only its own files, processes and network."
+        }
+      },
+      {
+        "title": "Cgroups limit resources",
+        "caption": "Control groups (cgroups) are another kernel feature. They cap how much CPU and memory each container may use, so one greedy container cannot starve the others.",
+        "visual": {
+          "description": "Same Host layout. Each container has two gauges beside it: 'CPU' and 'Memory', with a limit line marked on each, e.g. 'max 512 MB'. Container A's memory gauge fills up and stops at its limit line, which turns danger colour, while Container B's gauges stay steady.",
+          "keyElements": [
+            "cgroups",
+            "CPU",
+            "Memory",
+            "max 512 MB",
+            "limit"
+          ],
+          "whatChanges": "Container A's memory rises to its cgroup limit and is stopped there."
+        }
+      },
+      {
+        "title": "Client, daemon and registry",
+        "caption": "You type commands into the Docker client. It sends them to the Docker daemon, a background program that builds images and runs containers. Images are shared through a registry, such as Docker Hub.",
+        "visual": {
+          "description": "Left: a code panel 'Docker client' showing 'docker run nginx'. Center: a box 'Docker daemon' inside the Host. Top right: a cloud box 'Registry (Docker Hub)' holding image stacks. An accent message arrow goes client → daemon labelled 'run nginx'. The daemon checks its local image store, finds nothing, then an arrow goes daemon → registry labelled 'pull'. An image stack travels back down to the daemon. Finally a new Container box appears on the Host.",
+          "keyElements": [
+            "Docker client",
+            "Docker daemon",
+            "Registry",
+            "pull",
+            "push",
+            "Container"
+          ],
+          "whatChanges": "A command travels from client to daemon, the image is pulled from the registry, and a container starts."
+        }
+      },
+      {
+        "title": "Docker on Windows and Mac",
+        "caption": "Linux containers need a Linux kernel. On Windows and macOS, Docker Desktop quietly runs a small Linux virtual machine, and the containers run inside it.",
+        "visual": {
+          "description": "An outer box labelled 'Windows or macOS'. Inside it, a box labelled 'Lightweight Linux VM' fades in using the new colour, containing a 'Linux Kernel' bar with two Container boxes on top. The 'Docker client' panel sits outside the VM on the left with an accent arrow into the VM's 'Docker daemon'.",
+          "keyElements": [
+            "Windows or macOS",
+            "Linux VM",
+            "Linux Kernel",
+            "Docker daemon",
+            "Containers"
+          ],
+          "whatChanges": "A hidden Linux VM appears around the containers on a non-Linux computer."
+        }
+      }
+    ],
+    "recap": "Docker packages an app with all its dependencies into an image, built from a Dockerfile as a stack of read-only layers. Running an image creates a container by adding a thin writable layer on top. Containers are ordinary processes that share the host's Linux kernel, kept apart by namespaces and limited by cgroups. The Docker client sends commands to the daemon, which pulls images from registries and runs containers. On Windows and macOS, a small Linux VM provides the kernel those containers need."
+  }
+}

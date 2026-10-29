@@ -1,0 +1,17 @@
+const tl = h.timeline();
+const real = h.container({ x: 40, y: 60, w: 420, h: 400, label: 'Real DOM (in the browser)', role: 'neutral' });
+const virt = h.container({ x: 500, y: 60, w: 420, h: 400, label: 'Virtual DOM (in memory)', role: 'active' });
+const t1 = h.tree({ x: 60, y: 120, w: 380, h: 220, root: { id: 'a', label: 'App', children: [{ id: 'b', label: 'Header' }, { id: 'c', label: 'List', children: [{ id: 'd', label: 'Item 1' }, { id: 'e', label: 'Item 2' }] }] } });
+const t2 = h.tree({ x: 520, y: 120, w: 380, h: 220, role: 'active', root: { id: 'a', label: 'App', children: [{ id: 'b', label: 'Header' }, { id: 'c', label: 'List', children: [{ id: 'd', label: 'Item 1' }, { id: 'e', label: 'Item 2' }] }] } });
+const cmp = h.arrow(t2.nodes.e, t1.nodes.e, { label: 'compare', bend: 60, role: 'accent', toSide: 'bottom', fromSide: 'bottom' });
+const n = h.note({ x: 520, y: 380, w: 380, text: 'React compares the two trees and only updates what changed.', role: 'new' });
+h.reveal(tl, [real, ...t1.all, ...t1.edgeList], 0, { stagger: 0.08 });
+h.reveal(tl, [virt, ...t2.all, ...t2.edgeList], '>0.3', { stagger: 0.08 });
+h.recolor(tl, t2.nodes.e, 'new', '>0.4');
+h.swapText(tl, t2.nodes.e, 'Item 2 (edited)', '<');
+h.draw(tl, cmp, '>0.3');
+h.flow(tl, t2.nodes.e, t1.nodes.e, '>', { along: cmp, label: 'patch' });
+h.recolor(tl, t1.nodes.e, 'new', '>');
+h.reveal(tl, n, '>0.3', { from: 'up' });
+h.wait(tl, 1.5);
+return tl;

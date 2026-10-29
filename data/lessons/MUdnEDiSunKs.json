@@ -1,0 +1,273 @@
+{
+  "id": "MUdnEDiSunKs",
+  "prompt": "How does React reconciliation work?",
+  "createdAt": "2026-10-29T13:17:28.559Z",
+  "updatedAt": "2026-10-29T16:20:54.200Z",
+  "status": "partial",
+  "steps": [
+    {
+      "status": "ready",
+      "code": "// Layout: two columns joined by a 180px gap for the \"returns\" arrow.\n// Left container \"App component\" x 40..380, y 80..380 holds the code.\n// Right container \"Element tree\" x 560..920, y 80..380 holds the tree:\n//   root <div> centered at x 740 (y 140), children <h1> x 584..724 and <button> x 756..896 at y 276.\n// Note centered below at y 410.\nconst tl = h.timeline();\n\nconst codeArea = h.container({ x: 40, y: 80, w: 340, h: 300, label: 'App component', role: 'neutral' });\nconst src = h.code({\n  x: 64, y: 124, w: 292, title: 'App.jsx',\n  lines: [\n    'function App() {',\n    '  return (',\n    '    <div>',\n    '      <h1>Hello</h1>',\n    '      <button>Save</button>',\n    '    </div>',\n    '  );',\n    '}'\n  ]\n});\n\nconst treeArea = h.container({ x: 560, y: 80, w: 360, h: 300, label: 'Element tree', role: 'neutral' });\nconst divBox = h.box({ x: 670, y: 140, w: 140, h: 56, label: '<div>', role: 'neutral' });\nconst h1Box = h.box({ x: 584, y: 276, w: 140, h: 64, label: '<h1>', sub: '\"Hello\"', role: 'neutral' });\nconst btnBox = h.box({ x: 756, y: 276, w: 140, h: 64, label: '<button>', sub: '\"Save\"', role: 'neutral' });\nconst e1 = h.line(divBox, h1Box, { role: 'neutral' });\nconst e2 = h.line(divBox, btnBox, { role: 'neutral' });\n\nconst ret = h.arrow(codeArea, treeArea, { label: 'returns', role: 'accent' });\nconst n = h.note({ x: 300, y: 412, w: 360, text: 'Just light descriptions. Nothing is on the page yet.', role: 'accent' });\n\n// Hide the tree pieces until they are built\ngsap.set([treeArea, divBox, h1Box, btnBox, e1, e2, ret, n], { opacity: 0 });\n\n// 1) Set the scene: the component code\nh.reveal(tl, [codeArea, src], 0, { from: 'up' });\nh.highlightLine(tl, src, 1, '>0.4');\n\n// 2) The one change: code turns into a tree of element boxes\nh.draw(tl, ret, '>0.3');\nh.reveal(tl, treeArea, '<0.2');\n\nh.highlightLine(tl, src, 2, '>0.3');\nh.reveal(tl, divBox, '<', { from: 'scale' });\nh.recolor(tl, divBox, 'active', '<');\n\nh.highlightLine(tl, src, 3, '>0.4');\nh.reveal(tl, e1, '<');\nh.reveal(tl, h1Box, '<0.2', { from: 'down' });\nh.recolor(tl, h1Box, 'active', '<');\nh.recolor(tl, divBox, 'neutral', '<');\n\nh.highlightLine(tl, src, 4, '>0.4');\nh.reveal(tl, e2, '<');\nh.reveal(tl, btnBox, '<0.2', { from: 'down' });\nh.recolor(tl, btnBox, 'active', '<');\nh.recolor(tl, h1Box, 'neutral', '<');\n\nh.recolor(tl, btnBox, 'neutral', '>0.4');\nh.pulse(tl, [divBox, h1Box, btnBox], '<');\n\nh.reveal(tl, n, '>0.4', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:18:51.012Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout plan:\n// Top half: the element tree, centred on x 480 with the same box sizes as step 1.\n//   The heading \"Element tree\" sits at y 42.\n//   The <div> box spans x 410..550 at y 72..120.\n//   The <h1> box spans x 314..454 and the <button> box spans x 506..646, both at y 148..204.\n// Bottom half: the \"Real DOM\" container at x 200..760, y 326..500.\n//   Inside it, a DOM <div> region spans x 280..680, y 364..492.\n//   It holds a DOM <h1> at x 314..454 and a DOM <button> at x 506..646, both at y 408..464.\n// \"create\" arrows run straight down at x 384, 480 and 576. Their label pills land at y ~240 and y ~306.\n// Ending: the arrows fade, the tree is renamed \"Previous tree\" and slides left by 274px. A note appears on the right.\nconst tl = h.timeline();\n\n// Element tree (same sizes and roles as step 1)\nconst heading = h.text({ x: 480, y: 42, text: 'Element tree', size: 'label', anchor: 'middle' });\nconst divBox = h.box({ x: 410, y: 72, w: 140, h: 48, label: '<div>', role: 'neutral' });\nconst h1Box = h.box({ x: 314, y: 148, w: 140, h: 56, label: '<h1>', sub: '\"Hello\"', role: 'neutral' });\nconst btnBox = h.box({ x: 506, y: 148, w: 140, h: 56, label: '<button>', sub: '\"Save\"', role: 'neutral' });\nconst e1 = h.line(divBox, h1Box, { role: 'neutral' });\nconst e2 = h.line(divBox, btnBox, { role: 'neutral' });\n\n// Real DOM area and the nodes that will be created inside it\nconst realDom = h.container({ x: 200, y: 326, w: 560, h: 174, label: 'Real DOM', role: 'neutral' });\nconst domDiv = h.container({ x: 280, y: 364, w: 400, h: 128, label: '<div>', role: 'new' });\nconst domH1 = h.box({ x: 314, y: 408, w: 140, h: 56, label: '<h1>', sub: '\"Hello\"', role: 'new' });\nconst domBtn = h.box({ x: 506, y: 408, w: 140, h: 56, label: '<button>', sub: '\"Save\"', role: 'new' });\n\n// \"create\" arrows from each element down to its DOM node\nconst cDiv = h.arrow(divBox, domDiv, { label: 'create', role: 'new', fromSide: 'bottom', toSide: 'top' });\nconst cH1 = h.arrow(h1Box, domH1, { label: 'create', role: 'new', fromSide: 'bottom', toSide: 'top' });\nconst cBtn = h.arrow(btnBox, domBtn, { label: 'create', role: 'new', fromSide: 'bottom', toSide: 'top' });\n\nconst n = h.note({ x: 620, y: 96, w: 280, text: 'Remembered, to compare with the next render.', role: 'accent' });\n\ngsap.set([heading, divBox, h1Box, btnBox, e1, e2, realDom, domDiv, domH1, domBtn, cDiv, cH1, cBtn, n], { opacity: 0 });\n\n// 1) Set the scene: the tree from step 1, plus an empty page\nh.reveal(tl, [heading, divBox, e1, e2, h1Box, btnBox], 0, { stagger: 0.05 });\nh.reveal(tl, realDom, '>0.2', { from: 'up' });\n\n// 2) The one change: a real DOM node is created for every element\nh.recolor(tl, divBox, 'active', '>0.4');\nh.draw(tl, cDiv, '<');\nh.reveal(tl, domDiv, '>-0.2', { from: 'scale' });\nh.recolor(tl, divBox, 'neutral', '>0.2');\n\nh.recolor(tl, h1Box, 'active', '<');\nh.draw(tl, cH1, '<');\nh.reveal(tl, domH1, '>-0.2', { from: 'scale' });\nh.recolor(tl, h1Box, 'neutral', '>0.2');\n\nh.recolor(tl, btnBox, 'active', '<');\nh.draw(tl, cBtn, '<');\nh.reveal(tl, domBtn, '>-0.2', { from: 'scale' });\nh.recolor(tl, btnBox, 'neutral', '>0.2');\n\nh.pulse(tl, [domDiv, domH1, domBtn], '>0.2');\n\n// 3) The tree is kept as the \"Previous tree\"\nh.hide(tl, [cDiv, cH1, cBtn], '>0.5');\nh.swapText(tl, heading, 'Previous tree', '>0.2');\nconst treeParts = [heading, divBox, h1Box, btnBox, e1, e2];\ntreeParts.forEach((el, i) => {\n  h.moveBy(tl, el, { dx: -274, dy: 0 }, i === 0 ? '>0.3' : '<');\n});\nh.reveal(tl, n, '>0.3', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:20:06.087Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: two columns joined by a 200px gap for the \"re-render\" arrow.\n// Left container \"Previous tree\" x 40..380, y 80..400. Right container \"New tree\" x 580..920, y 80..400.\n// Inside each tree (offset +540 on the right):\n//   App box x 100..220 (y 120..168), accent state tag pill x 248..352 (y 128..160), \"state change\" label below the tag (y 178).\n//   <div> x 140..280 (y 208..256), children <h1> x 60..190 and <button> x 230..360 at y 300..364.\n// Note centred below at y 428.\nconst tl = h.timeline();\n\nfunction buildTree(ox, title, tagText, btnText) {\n  const area = h.container({ x: 40 + ox, y: 80, w: 340, h: 320, label: title, role: 'neutral' });\n  const app = h.box({ x: 100 + ox, y: 120, w: 120, h: 48, label: 'App', role: 'neutral' });\n  const tag = h.box({ x: 248 + ox, y: 128, w: 104, h: 32, label: tagText, role: 'accent', shape: 'pill', size: 'small' });\n  const div = h.box({ x: 140 + ox, y: 208, w: 140, h: 48, label: '<div>', role: 'neutral' });\n  const h1 = h.box({ x: 60 + ox, y: 300, w: 130, h: 64, label: '<h1>', sub: '\"Hello\"', role: 'neutral' });\n  const btn = h.box({ x: 230 + ox, y: 300, w: 130, h: 64, label: '<button>', sub: btnText, role: 'neutral' });\n  const l0 = h.line(app, div, { role: 'neutral' });\n  const l1 = h.line(div, h1, { role: 'neutral' });\n  const l2 = h.line(div, btn, { role: 'neutral' });\n  return { area, app, tag, div, h1, btn, l0, l1, l2 };\n}\n\nconst prev = buildTree(0, 'Previous tree', 'count: 0', '\"Clicked 0\"');\nconst next = buildTree(540, 'New tree', 'count: 1', '\"Clicked 1\"');\n\nconst stateLbl = h.text({ x: 300, y: 178, text: 'state change', size: 'small', anchor: 'middle', role: 'accent' });\nconst rerender = h.arrow(prev.area, next.area, { label: 're-render', role: 'accent' });\nconst n = h.note({ x: 300, y: 428, w: 360, text: 'A brand-new tree. The previous one is kept to compare.', role: 'accent' });\n\nconst nextAll = [next.area, next.app, next.tag, next.div, next.h1, next.btn, next.l0, next.l1, next.l2];\ngsap.set([...nextAll, stateLbl, rerender, n], { opacity: 0 });\n\n// 1) Set the scene: the remembered previous tree\nh.reveal(tl, [prev.area, prev.app, prev.tag, prev.l0, prev.div, prev.l1, prev.l2, prev.h1, prev.btn], 0, { stagger: 0.05 });\n\n// 2) State changes on App\nconst ring = h.highlight(tl, prev.tag, '>0.4', { role: 'active', pad: 6 });\nh.reveal(tl, stateLbl, '<', { from: 'up' });\nh.swapText(tl, prev.tag, 'count: 1', '>0.3');\nh.recolor(tl, prev.app, 'active', '<');\nh.pulse(tl, prev.tag, '>0.1');\n\n// 3) The one change: re-render produces a new tree beside the old one\nh.draw(tl, rerender, '>0.4');\nh.reveal(tl, next.area, '<0.3');\nh.reveal(tl, [next.app, next.tag], '>0.1', { from: 'scale' });\nh.reveal(tl, [next.l0, next.div], '>0.1', { from: 'down' });\nh.reveal(tl, [next.l1, next.l2, next.h1, next.btn], '>0.1', { from: 'down', stagger: 0.1 });\n\n// 4) Show what differs: the button text\nh.hide(tl, ring, '>0.3');\nh.recolor(tl, prev.app, 'neutral', '<');\nh.recolor(tl, next.btn, 'new', '>0.2');\nh.pulse(tl, next.btn, '>0.1');\n\nh.reveal(tl, n, '>0.4', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 2,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:19:51.916Z"
+    },
+    {
+      "status": "error",
+      "error": "browser.newPage: Target crashed ",
+      "attempts": 0
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: two columns with a 200px middle gap, matching the tree steps.\n// Left \"Perfect comparison\" container x 40..380, right \"React's rules\" x 580..920, both y 56..336.\n//   Bars share a baseline at y 316: tall bar x 140..280 (y 96..316), short bar x 680..820 (y 252..316).\n// Middle: \"vs\" label at x 480, y 186.\n// Below left: one note x 40..380, y 360. Below right: two rule cards x 580..920, y 360..416 and 440..496.\nconst tl = h.timeline();\n\n// Left: perfect comparison\nconst perfArea = h.container({ x: 40, y: 56, w: 340, h: 280, label: 'Perfect comparison', role: 'neutral' });\nconst tallBar = h.box({ x: 140, y: 96, w: 140, h: 220, label: 'very slow', sub: 'cost grows fast', role: 'old' });\n\n// Right: React's rules\nconst rulesArea = h.container({ x: 580, y: 56, w: 340, h: 280, label: \"React's rules\", role: 'neutral' });\nconst shortBar = h.box({ x: 680, y: 252, w: 140, h: 64, label: 'about one pass', role: 'neutral', size: 'body' });\n\n// Middle\nconst vs = h.text({ x: 480, y: 186, text: 'vs', size: 'heading', anchor: 'middle', muted: true });\n\n// Note under the left side\nconst n = h.note({ x: 40, y: 360, w: 340, text: 'Trying every possible match is far too slow for big trees.', role: 'old' });\n\n// Rule cards under the right side\nconst rule1 = h.box({ x: 580, y: 360, w: 340, h: 56, label: 'Rule 1: type', sub: 'different type = rebuild', role: 'accent' });\nconst rule2 = h.box({ x: 580, y: 440, w: 340, h: 56, label: 'Rule 2: keys', sub: 'keys identify list items', role: 'accent' });\n\ngsap.set([vs, n, rule1, rule2], { opacity: 0 });\n\n// 1) Scene\nh.reveal(tl, [perfArea, rulesArea], 0, { stagger: 0.15, duration: 0.6 });\nh.reveal(tl, vs, '>0.1', { from: 'fade', duration: 0.5 });\n\n// Tall bar grows slowly: perfect diffing is expensive\ntl.fromTo(tallBar, { scaleY: 0, transformOrigin: '50% 100%' }, { scaleY: 1, duration: 2, ease: 'power1.in' }, '>0.3');\nh.reveal(tl, n, '>0.2', { from: 'up' });\n\n// Short bar grows quickly: React's approach\ntl.fromTo(shortBar, { scaleY: 0, transformOrigin: '50% 100%' }, { scaleY: 1, duration: 0.6 }, '>0.5');\nh.recolor(tl, shortBar, 'new', '>0.2');\nh.pulse(tl, shortBar, '>0.1');\n\n// 2) The one change: the two rules appear as React's shortcut\nconst ring = h.highlight(tl, rulesArea, '>0.4', { role: 'active', pad: 6 });\nh.reveal(tl, rule1, '>0.2', { from: 'up' });\nh.reveal(tl, rule2, '>0.3', { from: 'up' });\nh.pulse(tl, [rule1, rule2], '>0.3');\nh.hide(tl, ring, '>0.3');\n\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:20:15.872Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: same two tree containers as step 4 (taller to fit state tags).\n// Left \"Previous tree\" x 40..380, right \"New tree\" x 580..920, both y 56..356.\n//   Roots (w140,h56) at y 104: left <div> x 140..280, right <section> x 680..820.\n//   Counter (w160,h56) at y 212: left x 130..290, right x 670..830.\n//   State tags (accent pills) centered under Counter at y 310 (x 210 / x 750).\n// Middle: \"Different type\" label at x 480, y 80; dashed comparison line between roots at y 132.\n// Bottom: one note centered, x 300..660, y 400.\nconst tl = h.timeline();\n\n// Previous tree\nconst prevArea = h.container({ x: 40, y: 56, w: 340, h: 300, label: 'Previous tree', role: 'neutral' });\nconst divL = h.box({ x: 140, y: 104, w: 140, h: 56, label: '<div>', role: 'neutral' });\nconst ctrL = h.box({ x: 130, y: 212, w: 160, h: 56, label: 'Counter', role: 'neutral' });\nconst eL = h.line(divL, ctrL, { role: 'neutral' });\nconst tagL = h.token({ x: 210, y: 310, label: 'state: 5', role: 'accent' });\n\n// New tree\nconst newArea = h.container({ x: 580, y: 56, w: 340, h: 300, label: 'New tree', role: 'neutral' });\nconst secR = h.box({ x: 680, y: 104, w: 140, h: 56, label: '<section>', role: 'neutral' });\nconst ctrR = h.box({ x: 670, y: 212, w: 160, h: 56, label: 'Counter', role: 'new' });\nconst eR = h.line(secR, ctrR, { role: 'new' });\nconst tagR = h.token({ x: 750, y: 310, label: 'state: 0', role: 'accent' });\n\n// Middle\nconst diffLabel = h.text({ x: 480, y: 80, text: 'Different type', size: 'label', anchor: 'middle', role: 'active' });\nconst pair = h.line({ x: 286, y: 132 }, { x: 674, y: 132 }, { role: 'active', dashed: true });\n\nconst note = h.note({ x: 300, y: 400, w: 360, text: 'Old subtree destroyed: the new Counter starts fresh.', role: 'accent' });\n\ngsap.set([ctrR, eR, tagR, diffLabel, pair, note], { opacity: 0 });\n\n// 1) Scene\nh.reveal(tl, [prevArea, divL, eL, ctrL, tagL, newArea, secR], 0, { stagger: 0.06, duration: 0.6 });\n\n// 2) Compare roots: types differ\nh.recolor(tl, [divL, secR], 'active', '>0.4');\nh.draw(tl, pair, '<0.2', { duration: 0.8 });\nh.reveal(tl, diffLabel, '>0.1', { from: 'down' });\nh.pulse(tl, [divL, secR], '>0.2');\n\n// 3) Throw away the old subtree (state included)\nh.recolor(tl, [divL, ctrL, eL], 'danger', '>0.5');\nh.pulse(tl, tagL, '>0.1');\nh.hide(tl, [divL, eL, ctrL, tagL], '>0.4');\n\n// 4) Build the new subtree from scratch\nh.recolor(tl, secR, 'new', '>0.3');\nh.draw(tl, eR, '>0.1', { duration: 0.6 });\nh.reveal(tl, ctrR, '>', { from: 'scale' });\nh.reveal(tl, tagR, '>0.2', { from: 'scale' });\nh.highlight(tl, tagR, '>0.2', { role: 'new', pad: 6 });\n\nh.reveal(tl, note, '>0.4', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:20:18.817Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: two tree containers side by side with a 200px middle gap (same as step 4).\n// Left \"Previous tree\" x 40..380, right \"New tree\" x 580..920, both y 56..416.\n//   Top pair: <button> boxes (w200,h64) at y 100: left x 110..310, right x 670..870.\n//             class tags (pill w140,h36) at y 188: left x 140..280, right x 700..840.\n//   Bottom pair: <Counter> boxes (w200,h64) at y 256: left x 110..310, right x 670..870.\n//             tags (pill w136,h36) at y 344: label tag left x 64..200 / right x 604..740,\n//             state tag left x 224..360 / right x 764..900.\n// Middle gap x 380..580: dashed \"same type\" pair lines at y 132 and y 288,\n//   short annotations at y 198 (\"class attribute\") and y 340 / 366 (\"props updated\", \"state kept\").\n// Note centered below the containers at y 436.\nconst tl = h.timeline();\n\n// Previous tree\nconst prevArea = h.container({ x: 40, y: 56, w: 340, h: 360, label: 'Previous tree', role: 'neutral' });\nconst btnL = h.box({ x: 110, y: 100, w: 200, h: 64, label: '<button>', sub: 'DOM node', role: 'neutral', shape: 'pill' });\nconst clsL = h.box({ x: 140, y: 188, w: 140, h: 36, label: \"class='blue'\", role: 'accent', shape: 'pill', size: 'small' });\nconst cntL = h.box({ x: 110, y: 256, w: 200, h: 64, label: '<Counter>', sub: 'component', role: 'neutral', shape: 'pill' });\nconst propL = h.box({ x: 64, y: 344, w: 136, h: 36, label: \"label='A'\", role: 'accent', shape: 'pill', size: 'small' });\nconst stL = h.box({ x: 224, y: 344, w: 136, h: 36, label: 'state: 5', role: 'neutral', shape: 'pill', size: 'small' });\n\n// New tree\nconst newArea = h.container({ x: 580, y: 56, w: 340, h: 360, label: 'New tree', role: 'neutral' });\nconst btnR = h.box({ x: 670, y: 100, w: 200, h: 64, label: '<button>', sub: 'DOM node', role: 'neutral', shape: 'pill' });\nconst clsR = h.box({ x: 700, y: 188, w: 140, h: 36, label: \"class='blue'\", role: 'accent', shape: 'pill', size: 'small' });\nconst cntR = h.box({ x: 670, y: 256, w: 200, h: 64, label: '<Counter>', sub: 'component', role: 'neutral', shape: 'pill' });\nconst propR = h.box({ x: 604, y: 344, w: 136, h: 36, label: \"label='A'\", role: 'accent', shape: 'pill', size: 'small' });\nconst stR = h.box({ x: 764, y: 344, w: 136, h: 36, label: 'state: 5', role: 'neutral', shape: 'pill', size: 'small' });\n\n// Pair comparison lines\nconst pairBtn = h.line(btnL, btnR, { role: 'active', dashed: true, label: 'same type' });\nconst pairCnt = h.line(cntL, cntR, { role: 'active', dashed: true, label: 'same type' });\n\n// Middle annotations\nconst tClass = h.text({ x: 480, y: 198, text: 'class attribute', size: 'small', anchor: 'middle', role: 'new' });\nconst tProps = h.text({ x: 480, y: 340, text: 'props updated', size: 'small', anchor: 'middle', role: 'new' });\nconst tState = h.text({ x: 480, y: 366, text: 'state kept', size: 'small', anchor: 'middle', muted: true });\n\nconst n = h.note({ x: 200, y: 436, w: 560, text: 'Same node, same instance: only the changed value is updated.', role: 'accent' });\n\ngsap.set([pairBtn, pairCnt, tClass, tProps, tState, n], { opacity: 0 });\n\n// 1) Scene: both trees already exist\nh.reveal(tl, [prevArea, btnL, clsL, cntL, propL, stL, newArea, btnR, clsR, cntR, propR, stR], 0, { stagger: 0.04, duration: 0.6 });\n\n// 2) Top pair: <button> vs <button>\nh.recolor(tl, [btnL, btnR], 'active', '>0.4');\nh.draw(tl, pairBtn, '<0.2', { duration: 0.8 });\nh.recolor(tl, [btnL, btnR], 'neutral', '>0.3');\nconst ring1 = h.highlight(tl, clsR, '<', { role: 'active', pad: 6 });\nh.pulse(tl, clsR, '>0.1');\nh.swapText(tl, clsR, \"class='red'\", '>0.1');\nh.recolor(tl, clsR, 'new', '<');\nh.recolor(tl, clsL, 'old', '<');\nh.reveal(tl, tClass, '<0.2', { from: 'up' });\nh.hide(tl, ring1, '>0.3');\n\n// 3) Bottom pair: <Counter> vs <Counter>\nh.recolor(tl, [cntL, cntR], 'active', '>0.4');\nh.draw(tl, pairCnt, '<0.2', { duration: 0.8 });\nh.recolor(tl, [cntL, cntR], 'neutral', '>0.3');\nconst ring2 = h.highlight(tl, propR, '<', { role: 'active', pad: 6 });\nh.pulse(tl, propR, '>0.1');\nh.swapText(tl, propR, \"label='B'\", '>0.1');\nh.recolor(tl, propR, 'new', '<');\nh.recolor(tl, propL, 'old', '<');\nh.reveal(tl, tProps, '<0.2', { from: 'up' });\nh.hide(tl, ring2, '>0.3');\n\n// State stays exactly as it was\nh.pulse(tl, [stL, stR], '>0.3');\nh.reveal(tl, tState, '<', { from: 'up' });\n\nh.reveal(tl, n, '>0.5', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:20:52.105Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: two columns with a 200px middle gap, matching the tree steps.\n// Left \"Previous tree\" container x 40..380, right \"New tree\" x 580..920, both y 56..436.\n// In each column the <ul> box sits at y 100, with item rows below at y 196 / 276 / 356 (h 56, gap 24).\n// Left boxes are at x 160..320 and their position labels at x 64. Right boxes are at x 640..800 and their position labels at x 816.\n// Position-matching lines run horizontally across the middle gap, with labels near x 480.\n// One note is centred below at y 452.\nconst tl = h.timeline();\n\nconst prevArea = h.container({ x: 40, y: 56, w: 340, h: 380, label: 'Previous tree', role: 'neutral' });\nconst newArea = h.container({ x: 580, y: 56, w: 340, h: 380, label: 'New tree', role: 'neutral' });\n\nconst rowY = [196, 276, 356];\nconst BW = 160, BH = 56;\n\n// Left tree\nconst ulL = h.box({ x: 160, y: 100, w: BW, h: BH, label: '<ul>', shape: 'pill', role: 'neutral' });\nconst bobL = h.box({ x: 160, y: rowY[0], w: BW, h: BH, label: 'Bob', sub: '<li>', role: 'neutral' });\nconst catL = h.box({ x: 160, y: rowY[1], w: BW, h: BH, label: 'Cat', sub: '<li>', role: 'neutral' });\nconst posL1 = h.text({ x: 64, y: rowY[0] + 20, text: 'position 1', size: 'small', muted: true });\nconst posL2 = h.text({ x: 64, y: rowY[1] + 20, text: 'position 2', size: 'small', muted: true });\n\n// Right tree\nconst ulR = h.box({ x: 640, y: 100, w: BW, h: BH, label: '<ul>', shape: 'pill', role: 'neutral' });\nconst annR = h.box({ x: 640, y: rowY[0], w: BW, h: BH, label: 'Ann', sub: '<li>', role: 'neutral' });\nconst bobR = h.box({ x: 640, y: rowY[1], w: BW, h: BH, label: 'Bob', sub: '<li>', role: 'neutral' });\nconst catR = h.box({ x: 640, y: rowY[2], w: BW, h: BH, label: 'Cat', sub: 'created', role: 'new' });\nconst posR1 = h.text({ x: 816, y: rowY[0] + 20, text: 'position 1', size: 'small', muted: true });\nconst posR2 = h.text({ x: 816, y: rowY[1] + 20, text: 'position 2', size: 'small', muted: true });\nconst posR3 = h.text({ x: 816, y: rowY[2] + 20, text: 'position 3', size: 'small', muted: true });\n\n// Matching by position\nconst m1 = h.line(bobL, annR, { label: 'text changed', role: 'active', fromSide: 'right', toSide: 'left' });\nconst m2 = h.line(catL, bobR, { label: 'text changed', role: 'active', fromSide: 'right', toSide: 'left' });\n\nconst n = h.note({ x: 220, y: 452, w: 520, text: 'Only Ann was added, yet every item gets changed.', role: 'accent' });\n\ngsap.set([catR, m1, m2, n], { opacity: 0 });\n\n// 1) Scene\nh.reveal(tl, [prevArea, newArea], 0, { stagger: 0.15, duration: 0.6 });\nh.reveal(tl, [ulL, ulR], '>0.1', { from: 'fade', duration: 0.5 });\nh.reveal(tl, [bobL, catL, annR, bobR], '>0.1', { from: 'up', stagger: 0.1, duration: 0.5 });\nh.reveal(tl, [posL1, posL2, posR1, posR2, posR3], '>0.2', { from: 'fade', stagger: 0.08, duration: 0.5 });\n\n// 2) The change: position 1 is compared with position 1\nh.recolor(tl, [bobL, annR], 'active', '>0.5');\nh.draw(tl, m1, '<0.1');\nh.pulse(tl, [bobL, annR], '>0.1');\nh.recolor(tl, bobL, 'neutral', '>0.3');\nh.recolor(tl, annR, 'new', '<');\n\n// Position 2 is compared with position 2\nh.recolor(tl, [catL, bobR], 'active', '>0.5');\nh.draw(tl, m2, '<0.1');\nh.pulse(tl, [catL, bobR], '>0.1');\nh.recolor(tl, catL, 'neutral', '>0.3');\nh.recolor(tl, bobR, 'new', '<');\n\n// Position 3 has nothing to match, so Cat is created\nh.reveal(tl, catR, '>0.5', { from: 'scale' });\nh.pulse(tl, catR, '>0.1');\n\nh.reveal(tl, n, '>0.5', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:20:54.489Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: same two-container arrangement as earlier steps.\n// Left \"Previous tree\" x 40..380, right \"New tree\" x 580..920, both y 56..404.\n//   Roots <ul> (w140,h56) at y 100: left x 160..300, right x 660..800.\n//   List items (w120,h48) at rows y 188 / 260 / 332 (centres 212 / 284 / 356).\n//     Left items x 170..290 (Bob, Cat), key tags centred at x 105 (outside edge).\n//     Right items x 670..790 (Ann, Bob, Cat), key tags centred at x 855.\n// Middle (x 380..580): \"match by …\" label at x 480, y 72; matching lines cross between items.\n// \"insert\" small label left of Ann at x 628. One note centred below, x 300..660, y 428.\nconst tl = h.timeline();\n\n// Previous tree\nconst prevArea = h.container({ x: 40, y: 56, w: 340, h: 348, label: 'Previous tree', role: 'neutral' });\nconst ulL = h.box({ x: 160, y: 100, w: 140, h: 56, label: '<ul>', role: 'neutral' });\nconst bobL = h.box({ x: 170, y: 188, w: 120, h: 48, label: 'Bob', role: 'neutral' });\nconst catL = h.box({ x: 170, y: 260, w: 120, h: 48, label: 'Cat', role: 'neutral' });\nconst kbL = h.token({ x: 105, y: 212, label: \"key='b'\", role: 'accent' });\nconst kcL = h.token({ x: 105, y: 284, label: \"key='c'\", role: 'accent' });\n\n// New tree\nconst newArea = h.container({ x: 580, y: 56, w: 340, h: 348, label: 'New tree', role: 'neutral' });\nconst ulR = h.box({ x: 660, y: 100, w: 140, h: 56, label: '<ul>', role: 'neutral' });\nconst annR = h.box({ x: 670, y: 188, w: 120, h: 48, label: 'Ann', role: 'neutral' });\nconst bobR = h.box({ x: 670, y: 260, w: 120, h: 48, label: 'Bob', role: 'neutral' });\nconst catR = h.box({ x: 670, y: 332, w: 120, h: 48, label: 'Cat', role: 'neutral' });\nconst kaR = h.token({ x: 855, y: 212, label: \"key='a'\", role: 'accent' });\nconst kbR = h.token({ x: 855, y: 284, label: \"key='b'\", role: 'accent' });\nconst kcR = h.token({ x: 855, y: 356, label: \"key='c'\", role: 'accent' });\nconst insertTxt = h.text({ x: 628, y: 203, text: 'insert', size: 'small', anchor: 'middle', role: 'new' });\n\n// Middle: old position matching, then key matching\nconst modeTxt = h.text({ x: 480, y: 72, text: 'match by position', size: 'label', anchor: 'middle', role: 'old' });\nconst pos1 = h.line({ x: 296, y: 212 }, { x: 664, y: 212 }, { role: 'old', dashed: true });\nconst pos2 = h.line({ x: 296, y: 284 }, { x: 664, y: 284 }, { role: 'old', dashed: true });\nconst keyB = h.line({ x: 296, y: 212 }, { x: 664, y: 284 }, { role: 'neutral' });\nconst keyC = h.line({ x: 296, y: 284 }, { x: 664, y: 356 }, { role: 'neutral' });\n\nconst note = h.note({ x: 300, y: 428, w: 360, text: 'Bob and Cat are kept, state and all. Only Ann is added.', role: 'accent' });\n\ngsap.set([kbL, kcL, kaR, kbR, kcR, insertTxt, keyB, keyC, note], { opacity: 0 });\n\n// 1) Scene: same lists as before, with the position matching\nh.reveal(tl, [prevArea, ulL, bobL, catL, newArea, ulR, annR, bobR, catR], 0, { stagger: 0.05, duration: 0.6 });\nh.reveal(tl, modeTxt, '>0.1', { from: 'down', duration: 0.5 });\nh.draw(tl, pos1, '<', { duration: 0.6 });\nh.draw(tl, pos2, '<0.15', { duration: 0.6 });\n\n// 2) Give each item a key\nh.reveal(tl, [kbL, kcL, kaR, kbR, kcR], '>0.5', { from: 'scale', stagger: 0.12, duration: 0.5 });\nh.pulse(tl, [kbL, kcL, kaR, kbR, kcR], '>0.1');\n\n// 3) Switch from position to key matching\nh.hide(tl, [pos1, pos2], '>0.4');\nh.swapText(tl, modeTxt, 'match by key', '<');\nh.recolor(tl, modeTxt, 'active', '<');\nh.recolor(tl, [bobL, bobR], 'active', '>0.2');\nh.draw(tl, keyB, '<', { duration: 0.8 });\nh.recolor(tl, [bobL, bobR], 'neutral', '>0.3');\nh.recolor(tl, [catL, catR], 'active', '<');\nh.draw(tl, keyC, '<', { duration: 0.8 });\nh.recolor(tl, [catL, catR], 'neutral', '>0.3');\n\n// 4) The one leftover: Ann is inserted\nh.recolor(tl, annR, 'new', '>0.3');\nh.reveal(tl, insertTxt, '<0.2', { from: 'left', duration: 0.5 });\nh.highlight(tl, annR, '>0.1', { role: 'new', pad: 6 });\n\nh.reveal(tl, note, '>0.4', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:20:59.200Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout plan:\n// Top phase bar y 48..84: \"Render phase\" pill x 40..460, \"Commit phase\" pill x 500..920.\n// Render side (x 40..460):\n//   \"Previous tree\" container x 40..220, \"New tree\" container x 280..460, both y 108..324.\n//   Item boxes w140 h32 at y 148 / 192 / 236 / 280 (left x 60, right x 300).\n//   Dashed comparison lines cross the 100px gap between the two trees.\n//   \"List of changes\" container x 160..460, y 348..492; items w220 h32 at x 200, y 392 and 440.\n// Commit side: \"Real DOM\" container x 560..920, y 108..492.\n//   <ul> x 590 y 156 (w120 h40); class tag x 740 y 158 (w140 h36);\n//   li children x 740 (w140 h40) at y 236 (Ann, added), 304 (Bob), 372 (Cat).\n// Arrows from list items (right edge x 420) go up-right to <ul> and to Ann in the Real DOM.\nconst tl = h.timeline();\n\n// Phase bar\nconst renderBar = h.box({ x: 40, y: 48, w: 420, h: 36, label: 'Render phase', role: 'active', shape: 'pill', size: 'small' });\nconst commitBar = h.box({ x: 500, y: 48, w: 420, h: 36, label: 'Commit phase', role: 'muted', shape: 'pill', size: 'small' });\n\n// Previous tree\nconst prevArea = h.container({ x: 40, y: 108, w: 180, h: 216, label: 'Previous tree', role: 'neutral' });\nconst ulL = h.box({ x: 60, y: 148, w: 140, h: 32, label: '<ul>', role: 'neutral', shape: 'pill', size: 'small' });\nconst bobL = h.box({ x: 60, y: 192, w: 140, h: 32, label: 'Bob', role: 'neutral', shape: 'pill', size: 'small' });\nconst catL = h.box({ x: 60, y: 236, w: 140, h: 32, label: 'Cat', role: 'neutral', shape: 'pill', size: 'small' });\n\n// New tree\nconst newArea = h.container({ x: 280, y: 108, w: 180, h: 216, label: 'New tree', role: 'neutral' });\nconst ulR = h.box({ x: 300, y: 148, w: 140, h: 32, label: '<ul>', role: 'neutral', shape: 'pill', size: 'small' });\nconst annR = h.box({ x: 300, y: 192, w: 140, h: 32, label: 'Ann', role: 'new', shape: 'pill', size: 'small' });\nconst bobR = h.box({ x: 300, y: 236, w: 140, h: 32, label: 'Bob', role: 'neutral', shape: 'pill', size: 'small' });\nconst catR = h.box({ x: 300, y: 280, w: 140, h: 32, label: 'Cat', role: 'neutral', shape: 'pill', size: 'small' });\n\n// Comparison lines\nconst cmpUl = h.line(ulL, ulR, { role: 'active', dashed: true });\nconst cmpBob = h.line(bobL, bobR, { role: 'active', dashed: true });\nconst cmpCat = h.line(catL, catR, { role: 'active', dashed: true });\n\n// List of changes\nconst list = h.container({ x: 160, y: 348, w: 300, h: 144, label: 'List of changes', role: 'accent' });\nconst chIns = h.box({ x: 200, y: 392, w: 220, h: 32, label: 'insert Ann', role: 'new', shape: 'pill', size: 'small' });\nconst chUpd = h.box({ x: 200, y: 440, w: 220, h: 32, label: 'update class', role: 'new', shape: 'pill', size: 'small' });\n\n// Real DOM\nconst dom = h.container({ x: 560, y: 108, w: 360, h: 384, label: 'Real DOM', role: 'neutral' });\nconst ulD = h.box({ x: 590, y: 156, w: 120, h: 40, label: '<ul>', role: 'neutral', shape: 'pill', size: 'small' });\nconst clsD = h.box({ x: 740, y: 158, w: 140, h: 36, label: \"class='a'\", role: 'accent', shape: 'pill', size: 'small' });\nconst annD = h.box({ x: 740, y: 236, w: 140, h: 40, label: 'Ann', role: 'new', shape: 'pill', size: 'small' });\nconst bobD = h.box({ x: 740, y: 304, w: 140, h: 40, label: 'Bob', role: 'neutral', shape: 'pill', size: 'small' });\nconst catD = h.box({ x: 740, y: 372, w: 140, h: 40, label: 'Cat', role: 'neutral', shape: 'pill', size: 'small' });\nconst eAnn = h.line(ulD, annD, { role: 'neutral', fromSide: 'bottom', toSide: 'left' });\nconst eBob = h.line(ulD, bobD, { role: 'neutral', fromSide: 'bottom', toSide: 'left' });\nconst eCat = h.line(ulD, catD, { role: 'neutral', fromSide: 'bottom', toSide: 'left' });\n\n// Commit arrows\nconst aIns = h.arrow(chIns, annD, { role: 'new', fromSide: 'right', toSide: 'left' });\nconst aUpd = h.arrow(chUpd, ulD, { role: 'new', fromSide: 'right', toSide: 'left' });\n\ngsap.set([cmpUl, cmpBob, cmpCat, chIns, chUpd, annD, eAnn, aIns, aUpd], { opacity: 0 });\n\n// 1) Scene\nh.reveal(tl, [renderBar, commitBar], 0, { stagger: 0.1, duration: 0.5 });\nh.reveal(tl, [prevArea, ulL, bobL, catL, newArea, ulR, annR, bobR, catR], '<0.2', { stagger: 0.04, duration: 0.5 });\nh.reveal(tl, [dom, ulD, clsD, bobD, catD, eBob, eCat], '<0.2', { stagger: 0.04, duration: 0.5 });\nh.reveal(tl, list, '<0.2', { duration: 0.5 });\n\n// 2) Render phase: compare and collect changes (page untouched)\nh.pulse(tl, renderBar, '>0.3');\nh.draw(tl, cmpUl, '>0.1', { duration: 0.6 });\nh.draw(tl, cmpBob, '<0.2', { duration: 0.6 });\nh.draw(tl, cmpCat, '<0.2', { duration: 0.6 });\nh.pulse(tl, annR, '>0.2');\nh.reveal(tl, chIns, '<', { from: 'left', duration: 0.6 });\nh.pulse(tl, ulR, '>0.3');\nh.reveal(tl, chUpd, '<', { from: 'left', duration: 0.6 });\n\n// 3) Commit phase: apply all changes at once\nh.recolor(tl, renderBar, 'muted', '>0.5');\nh.recolor(tl, commitBar, 'active', '<');\nh.dim(tl, [prevArea, ulL, bobL, catL, newArea, ulR, annR, bobR, catR, cmpUl, cmpBob, cmpCat], '<');\nh.draw(tl, aIns, '>0.2', { duration: 0.7 });\nh.draw(tl, aUpd, '<', { duration: 0.7 });\nh.flow(tl, chIns, annD, '>', { label: '+', role: 'new', along: aIns, duration: 1.2 });\nh.flow(tl, chUpd, ulD, '<', { label: '✎', role: 'new', along: aUpd, duration: 1.2 });\nh.reveal(tl, [annD, eAnn], '>-0.1', { from: 'scale', stagger: 0, duration: 0.6 });\nh.recolor(tl, ulD, 'new', '<');\nh.swapText(tl, clsD, \"class='b'\", '<');\nh.recolor(tl, clsD, 'new', '<');\nconst ring = h.highlight(tl, dom, '>0.2', { role: 'new', pad: 6 });\nh.pulse(tl, [ulD, clsD, annD], '<0.1');\n\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:22:20.785Z"
+    },
+    {
+      "status": "ready",
+      "code": "// Layout: one horizontal timeline. Left container \"Render phase · Fiber\" x 40..700, y 100..300.\n// Right container \"Commit phase\" x 724..920, y 100..300 (24px gap between phases).\n// Unit-of-work blocks share the row y 168 (w 100, h 64, gap 24): x 64 / 188 / 312 / 436.\n// The urgent update enters from below (x 312, y 344) into slot 3; units 3 and 4 shift right to x 436 / 560.\n// The Commit block sits alone in the right container at x 748, y 168 (w 148). One note is centred below at y 440.\nconst tl = h.timeline();\n\nconst renderArea = h.container({ x: 40, y: 100, w: 660, h: 200, label: 'Render phase · Fiber', role: 'neutral' });\nconst commitArea = h.container({ x: 724, y: 100, w: 196, h: 200, label: 'Commit phase', role: 'neutral' });\n\nconst BW = 100, BH = 64, rowY = 168;\nconst xs = [64, 188, 312, 436];\nconst units = xs.map((x, i) => h.box({ x, y: rowY, w: BW, h: BH, label: 'unit of work', sub: 'fiber ' + (i + 1), role: 'neutral', size: 'body' }));\n\nconst urgent = h.box({ x: 312, y: 344, w: BW, h: BH, label: 'urgent update', sub: 'keypress', role: 'accent', size: 'body' });\nconst commit = h.box({ x: 748, y: rowY, w: 148, h: BH, label: 'Commit', sub: 'never split', role: 'active' });\n\nconst n = h.note({ x: 240, y: 440, w: 480, text: 'Render work can pause between units. Commit runs in one go.', role: 'accent' });\n\ngsap.set([urgent, commit, n], { opacity: 0 });\n\n// 1) Scene: the render phase, now split into small units\nh.reveal(tl, [renderArea, commitArea], 0, { stagger: 0.15, duration: 0.6 });\nh.reveal(tl, units, '>0.1', { from: 'left', stagger: 0.12, duration: 0.5 });\n\n// React works through units one at a time\nh.recolor(tl, units[0], 'active', '>0.4');\nh.recolor(tl, units[0], 'new', '>0.2');\nh.recolor(tl, units[1], 'active', '<');\nh.recolor(tl, units[1], 'new', '>0.2');\n\n// 2) The change: an urgent update arrives and cuts in\nh.reveal(tl, urgent, '>0.4', { from: 'up', duration: 0.6 });\nh.pulse(tl, urgent, '>0.1');\nh.moveTo(tl, units[3], { x: 560 }, '>0.3', { duration: 0.8 });\nh.moveTo(tl, units[2], { x: 436 }, '<', { duration: 0.8 });\nh.moveTo(tl, urgent, { y: rowY }, '>0.1', { duration: 0.8 });\nconst ring = h.highlight(tl, urgent, '>0.1', { role: 'accent', pad: 8 });\nh.recolor(tl, urgent, 'new', '>0.3');\nh.hide(tl, ring, '>0.2');\n\n// Render work resumes where it left off\nh.recolor(tl, units[2], 'active', '>0.4');\nh.recolor(tl, units[2], 'new', '>0.2');\nh.recolor(tl, units[3], 'active', '<');\nh.recolor(tl, units[3], 'new', '>0.2');\n\n// 3) Commit: one solid, unbroken block\nh.reveal(tl, commit, '>0.5', { from: 'scale', duration: 0.6 });\nh.pulse(tl, commit, '>0.1');\nh.recolor(tl, commit, 'new', '>0.3');\n\nh.reveal(tl, n, '>0.5', { from: 'up' });\nh.wait(tl, 2);\nreturn tl;",
+      "attempts": 1,
+      "warnings": [],
+      "updatedAt": "2026-10-29T13:21:27.517Z"
+    }
+  ],
+  "plan": {
+    "title": "How React Reconciliation Works",
+    "summary": "You will understand how React compares the new description of your screen with the previous one and changes only the parts of the real page that need updating.",
+    "prerequisites": [
+      {
+        "term": "DOM",
+        "explanation": "The DOM (Document Object Model) is the browser's live tree of everything on a web page: every heading, button and text block is a node in this tree. Changing the DOM changes what you see, but each change costs the browser some work."
+      },
+      {
+        "term": "Component",
+        "explanation": "In React, a component is a reusable function that returns a description of a piece of the screen, such as a button or a list. Components can contain other components, forming a tree."
+      },
+      {
+        "term": "State",
+        "explanation": "State is data a component remembers between updates, such as a counter value or the text typed into a box. When state changes, React re-runs the component to get a new description of the screen."
+      },
+      {
+        "term": "React element",
+        "explanation": "A React element is a small, plain JavaScript object describing what should appear, for example 'a <button> with the text Save'. It is only a description, not the real thing on the page. A tree of these is often called the 'virtual DOM'."
+      }
+    ],
+    "analogy": {
+      "text": "Imagine updating a printed seating chart for a dinner. Instead of reprinting the whole room plan, you compare the old chart with the new guest list and only change the name cards that are different. Where the analogy breaks down: React uses fixed, quick rules for comparing rather than examining every possible difference, so sometimes it rebuilds a section that a human would have kept."
+    },
+    "visualGuide": "Most steps show two trees side by side: the 'Previous tree' on the left and the 'New tree' on the right, built from rounded boxes labelled with element types like <div> or <ul>. The 'Real DOM' sits as a separate tree at the bottom or far right, representing the actual page. Neutral boxes are unchanged nodes, active highlights the pair currently being compared, new marks added or updated nodes, danger marks removed nodes, old marks the outdated version, and accent is used for props, keys and state values shown as small tags on the boxes. Muted is used for parts of the tree not involved in the current step.",
+    "steps": [
+      {
+        "title": "Components Describe the Screen",
+        "caption": "Your components do not touch the page directly. They return React elements: light descriptions of what the screen should look like. Together these form a tree.",
+        "visual": {
+          "description": "On the left, a code snippet: function App() returning <div> containing <h1>Hello</h1> and <button>Save</button>. An arrow labelled 'returns' points right to a tree of three boxes: <div> at the top, with child boxes <h1> 'Hello' and <button> 'Save' below it. The tree boxes appear one by one from top to bottom.",
+          "keyElements": [
+            "App component",
+            "Element tree",
+            "<div>",
+            "<h1>",
+            "<button>"
+          ],
+          "whatChanges": "The code turns into a tree of element boxes."
+        }
+      },
+      {
+        "title": "First Render Builds the DOM",
+        "caption": "On the very first render there is nothing to compare against, so React creates a real DOM node for every element and puts them on the page.",
+        "visual": {
+          "description": "The element tree sits at the top. Below it, an empty area labelled 'Real DOM'. Arrows labelled 'create' go from each element box down to matching DOM node boxes, which appear in the new colour one at a time. The element tree is then labelled 'Previous tree' and slides to the left to be remembered.",
+          "keyElements": [
+            "Element tree",
+            "Real DOM",
+            "create",
+            "Previous tree"
+          ],
+          "whatChanges": "Real DOM nodes are created for every element."
+        }
+      },
+      {
+        "title": "State Changes, New Tree",
+        "caption": "When state changes, React calls the affected components again. They return a brand-new element tree describing the updated screen.",
+        "visual": {
+          "description": "The Previous tree sits on the left. A small accent tag 'count: 0' on the App box changes to 'count: 1'. An arrow labelled 're-render' produces a New tree on the right, identical except the <button> text now reads 'Clicked 1'. The changed text is shown in the new colour.",
+          "keyElements": [
+            "Previous tree",
+            "New tree",
+            "state change",
+            "re-render"
+          ],
+          "whatChanges": "A second, new element tree appears beside the old one."
+        }
+      },
+      {
+        "title": "Reconciliation Means Comparing",
+        "caption": "Reconciliation is the process of comparing the new tree with the previous one to work out the smallest set of real DOM changes. Rebuilding the whole page each time would be slow and would lose things like typed text and focus.",
+        "visual": {
+          "description": "Previous tree on the left, New tree on the right. A label 'Reconciliation' appears between them. Dashed active-coloured lines connect matching boxes pairwise, starting at the roots and moving down level by level. At the end a small box 'List of changes' appears at the bottom containing one item: 'update button text'.",
+          "keyElements": [
+            "Previous tree",
+            "New tree",
+            "Reconciliation",
+            "List of changes"
+          ],
+          "whatChanges": "Matching nodes are paired up and one change is identified."
+        }
+      },
+      {
+        "title": "Fast Rules, Not Perfect Diffing",
+        "caption": "Finding the absolute minimum changes between any two trees is very slow for large trees. So React uses two simple assumptions that let it compare in roughly one pass through the tree.",
+        "visual": {
+          "description": "A box on the left labelled 'Perfect comparison' with a tall bar labelled 'very slow'. A box on the right labelled 'React's rules' with a short bar labelled 'about one pass'. Below the right box, two accent cards appear: 'Rule 1: different type = rebuild' and 'Rule 2: keys identify list items'.",
+          "keyElements": [
+            "Perfect comparison",
+            "React's rules",
+            "Rule 1: type",
+            "Rule 2: keys"
+          ],
+          "whatChanges": "The two rules appear as React's shortcut."
+        }
+      },
+      {
+        "title": "Different Type: Replace Subtree",
+        "caption": "If an element at the same position changes type, for example <div> becomes <section>, React throws away the old node and everything inside it, then builds the new one from scratch. State inside is lost.",
+        "visual": {
+          "description": "Left: Previous tree with a <div> containing a <Counter> box with an accent tag 'state: 5'. Right: New tree with <section> at the same position containing <Counter>. The comparison line between <div> and <section> turns active, then the whole old subtree turns danger and fades out. The new subtree appears in the new colour, and the Counter tag now reads 'state: 0'.",
+          "keyElements": [
+            "<div>",
+            "<section>",
+            "Counter",
+            "state: 5",
+            "state: 0"
+          ],
+          "whatChanges": "The old subtree is removed and a fresh one is created."
+        }
+      },
+      {
+        "title": "Same Type: Update in Place",
+        "caption": "If the type matches, React keeps the existing node. For HTML elements it updates only the changed attributes. For components it keeps the same instance and its state, passing in the new props (inputs from the parent).",
+        "visual": {
+          "description": "Two pairs shown stacked. Top pair: Previous <button class='blue'> and New <button class='red'>; only the class tag flashes and changes to the new colour while the box itself stays. Bottom pair: Previous <Counter label='A'> with 'state: 5' and New <Counter label='B'>; the label tag updates in the new colour while 'state: 5' stays unchanged and neutral.",
+          "keyElements": [
+            "<button>",
+            "class attribute",
+            "Counter",
+            "props",
+            "state kept"
+          ],
+          "whatChanges": "Only the changed attribute or prop is updated; the node and state remain."
+        }
+      },
+      {
+        "title": "Lists Without Keys",
+        "caption": "For a list of children, React by default matches them by position: first with first, second with second. Inserting an item at the start shifts every position, so React updates every item and may attach state to the wrong one.",
+        "visual": {
+          "description": "Previous <ul> on the left with items 'Bob', 'Cat'. New <ul> on the right with items 'Ann', 'Bob', 'Cat'. Position numbers 1, 2, 3 appear beside each item. Lines connect by position: Bob to Ann, Cat to Bob, and nothing to Cat. Each matched item flashes active and shows 'text changed'; the last 'Cat' appears in the new colour as created.",
+          "keyElements": [
+            "<ul>",
+            "position 1",
+            "position 2",
+            "Ann",
+            "Bob",
+            "Cat"
+          ],
+          "whatChanges": "Matching by position causes every item to be changed."
+        }
+      },
+      {
+        "title": "Keys Identify Items",
+        "caption": "A key is a stable, unique label you give each list item, such as a database ID. React matches items by key instead of position, so it sees that only 'Ann' is new and keeps Bob and Cat, including their state.",
+        "visual": {
+          "description": "Same lists as the previous step, but each item has an accent key tag: key='b' Bob, key='c' Cat on the left; key='a' Ann, key='b' Bob, key='c' Cat on the right. Lines connect matching keys: b to b, c to c, both neutral. 'Ann' (key='a') appears alone in the new colour, labelled 'insert'.",
+          "keyElements": [
+            "key='a'",
+            "key='b'",
+            "key='c'",
+            "insert",
+            "match by key"
+          ],
+          "whatChanges": "Matching switches from position to key, leaving one insertion."
+        }
+      },
+      {
+        "title": "Render Phase, Then Commit",
+        "caption": "Work happens in two phases. In the render phase React calls components and compares trees, without touching the page. In the commit phase it applies the collected changes to the real DOM at once, so you never see a half-updated screen.",
+        "visual": {
+          "description": "A horizontal timeline across the canvas with two segments. Left segment 'Render phase' shows the two trees and comparison lines, with a 'List of changes' box filling up with items: 'insert Ann', 'update class'. Right segment 'Commit phase' shows the Real DOM tree; arrows from the list go into it and the affected nodes change to the new colour together.",
+          "keyElements": [
+            "Render phase",
+            "List of changes",
+            "Commit phase",
+            "Real DOM"
+          ],
+          "whatChanges": "Collected changes are applied to the real DOM in one go."
+        }
+      },
+      {
+        "title": "Fiber: Work in Small Pieces",
+        "caption": "Since React 16, reconciliation uses a structure called Fiber, which splits rendering into small units of work. With newer features, React can pause rendering for urgent updates like typing, then resume. The commit phase itself is never split.",
+        "visual": {
+          "description": "The render phase segment from the previous step is broken into small blocks labelled 'unit of work'. An accent block 'urgent: keypress' slides in between them; the remaining render blocks shift right while the urgent one completes first. At the end, the single solid 'Commit' block follows, unbroken.",
+          "keyElements": [
+            "Fiber",
+            "unit of work",
+            "urgent update",
+            "Commit"
+          ],
+          "whatChanges": "Render work is split and can be interrupted; commit stays whole."
+        }
+      }
+    ],
+    "recap": "Components return a tree of React elements describing the screen, not the screen itself. When state changes, React builds a new tree and reconciles it with the previous one to find what actually changed. It uses fast rules: a different type rebuilds that subtree, the same type is updated in place and keeps its state, and keys identify list items. All changes are worked out in the render phase and applied to the real DOM together in the commit phase."
+  }
+}
